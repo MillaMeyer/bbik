@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#11131a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BBIK PSV">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>BBIK PSV — Werkbank, Karteikarten, Podcast</title>
+<style>
+:root{
+  --bg:#11131a; --panel:#1a1d25; --panel2:#222630; --line:#333846;
+  --txt:#e8eaf0; --dim:#98a0b3; --acc:#5aa9ff;
+  --BAU:#8b93a8; --COW:#e0a458; --LTA:#4fb286; --RAA:#e06c75; --RDA:#a78bfa;
+  --ok:#3fb950; --warn:#e3b341; --bad:#f85149;
+}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.55 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+header{padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+h1{font-size:15px;margin:0 0 8px;color:var(--dim);font-weight:600}
+h2{font-size:16px;margin:22px 0 8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.wrap{max-width:1050px;margin:0 auto;padding:14px 16px 100px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{padding:7px 14px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);border-radius:6px;cursor:pointer;font-size:14px}
+.tab.on{background:var(--acc);color:#06203d;border-color:var(--acc);font-weight:600}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+input,select,textarea,button{font:inherit;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+button{cursor:pointer}button:hover{border-color:var(--acc)}
+input[type=search]{min-width:200px}
+.stats{font-size:13px;color:var(--dim)}
+.pill{display:inline-block;padding:1px 8px;border-radius:9px;font-size:11px;color:#10131a;font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:14px 16px;margin:14px 0}
+.card.st-bestaetigt{border-left-color:var(--ok)}
+.card.st-ungeprüft{border-left-color:var(--line)}
+.card.st-falsch{border-left-color:var(--bad)}
+.card.st-quelle{border-left-color:var(--warn)}
+.card.st-roh{border-left-color:var(--warn)}
+.card.st-bearbeitet{border-left-color:var(--acc)}
+.zust{font-size:12px;border:1px solid;border-radius:5px;padding:1px 7px}
+button.reset{font-size:13px}
+.chead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
+.nr{font-weight:700;color:var(--acc);font-size:13px}
+.meta{font-size:13px;color:var(--dim)}
+.qtext{margin:2px 0 12px;white-space:pre-wrap}
+label.fl{display:block;font-size:12px;color:var(--dim);margin:10px 0 3px}
+textarea.ans{width:100%;min-height:150px;resize:vertical;line-height:1.55;font-family:inherit}
+input.fund{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}
+.row>div{flex:1;min-width:170px}
+details.prot{margin-top:10px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+details.prot summary{cursor:pointer;font-size:13px;color:var(--warn)}
+details.prot .body{margin-top:8px;font-size:14px;color:#cdd3e0;white-space:pre-wrap}
+.warnbox{background:#3a2a12;border:1px solid #6b4f1d;border-radius:6px;padding:9px 12px;font-size:14px;margin:12px 0}
+.grpH{margin:26px 0 4px;font-size:15px;color:var(--acc);border-bottom:1px solid var(--line);padding-bottom:4px}
+.saveflag{position:fixed;right:12px;bottom:12px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--dim);z-index:40}
+ul{margin:6px 0 6px 18px;padding:0}li{margin:3px 0}
+.k{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--acc)}
+
+/* Karteikarten */
+#kkbox{max-width:760px;margin:0 auto}
+.kk{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px 24px;min-height:300px;display:flex;flex-direction:column;justify-content:center}
+.kk .frage{font-size:21px;line-height:1.5;white-space:pre-wrap}
+.kk .antwort{margin-top:20px;border-top:1px solid var(--line);padding-top:16px;white-space:pre-wrap;font-size:17px}
+.kk .fund{margin-top:12px;font-size:14px;color:var(--acc)}
+.kk .leer{color:var(--warn);font-style:italic}
+.kkbar{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.kkbar button{padding:12px 22px;font-size:16px;border-radius:8px}
+.b-nein{border-color:var(--bad);color:#ffb4ae}
+.b-halb{border-color:var(--warn);color:#f2dda0}
+.b-ja{border-color:var(--ok);color:#a6e3ac}
+.boxes{display:flex;gap:6px;justify-content:center;margin-top:14px;font-size:12px;color:var(--dim);flex-wrap:wrap}
+.boxes span{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:3px 9px}
+.kkhint{text-align:center;color:var(--dim);font-size:13px;margin-top:10px}
+
+/* Podcast */
+.sel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
+.sel label{display:flex;gap:9px;align-items:flex-start;cursor:pointer;padding:4px 0;font-size:14px}
+.sel input[type=checkbox]{margin-top:4px;flex:0 0 auto}
+html{-webkit-text-size-adjust:100%}
+@media(max-width:640px){
+  .wrap{padding:10px 10px calc(80px + env(safe-area-inset-bottom))}
+  header{padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top))}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px -10px 0;padding:0 10px 2px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;min-height:38px;display:flex;align-items:center}
+  button,select{min-height:44px}
+  input,select,textarea{font-size:16px}
+  input[type=search]{min-width:0;flex:1 1 100%}
+  .bar>select,.bar>button{flex:1 1 40%}
+  .card{padding:12px;margin:10px 0}
+  .row>div{min-width:130px}
+  .kk{padding:20px 16px;min-height:240px}
+  .kk .frage{font-size:18px}
+  .kk .antwort{font-size:16px}
+  .kkbar button{flex:1 1 30%;min-height:54px;padding:10px 6px;font-size:15px}
+  .saveflag{left:10px;right:10px;text-align:center;bottom:calc(8px + env(safe-area-inset-bottom))}
+}
+</style>
+<script id="savedstate">window.SAVED_STATE={"C1":{"antwort":"Baugenehmigung · Brandschutzkonzept inkl. Prüfbericht zum BSK · MBO · M-GarVO · M-SonderbauVO · M-Richtlinien · MPrüfVO · MPPVO · MVV TB · An- und Verwendbarkeitsnachweise"},"C2":{"antwort":"M-GarVO §16(6): geschlossene Großgaragen mit nicht geringem Zu- und Abgangsverkehr benötigen COW; bei 250 ppm Blinkzeichen und Signal über Lautsprecher; Offenhaltung der Ausfahrten; Anschluss an SSV.\nMVV TB Anhang 14 Abschnitt 9: Messstelle 1,50 m; Signalisierung für die Dauer der Grenzwertüberschreitung; aaRdT sind zu berücksichtigen.\nVDI 2053-1:2014-12: Warnung (60 ppm über 15 min, 120 ppm über 2 min) und Steuerung der Lüftung; je 400 m² ein Sensor; je 500 m² ein Transparent; je Rettungsweg/Brandabschnitt ein akustisches Signal; Gerät und Sensoren nach DIN EN 50545-1; Messstelle 1,50 m; Störungsanzeige zusätzlich bei Garagenaufsicht; Garagenabluft ggf. auf max. Stufe; akustisches Signal quittierbar, nach zwei Minuten selbsttätig aus; Ersatzstromquelle über eine Stunde."},"C3":{"antwort":"Baurechtlich: Offenhaltung der Ausfahrten (M-GarVO §16(6)) oder Auflagen, z. B. Ampelschaltung, Alarmweiterleitung, diverse Steuerfunktionen (Baugenehmigung).\nNormativ/freiwillig: Lüftungssteuerung nach VDI 2053-1:2014-12 — 30..40 / 60..80 / 100 ppm."},"C4":{"antwort":"Nie."},"C5":{"antwort":"Ja, Abweichung nach §85a MBO bzw. §67 MBO bei Fußnote 2 im Abschnitt A2 MVV TB."},"C6":{"antwort":"Soweit das bauordnungsrechtliche Schutzziel auf andere Art und Weise erfüllt werden kann, darf mittels Beschreibung in der technischen Fachplanung oder dem Brandschutzkonzept hinsichtlich Planung, Bemessung und Ausführung abgewichen werden — §85a MBO."},"C7":{"antwort":"Nein. Anforderungen hinsichtlich Funktionserhalt nur über MLAR oder M-GarVO, für COW dort aber nicht enthalten."},"C8":{"antwort":"Baugenehmigung · BSK inkl. Prüfbericht zum BSK · Pläne und Schnitte der Garage (BSK) · Instandhaltungsnachweis · Pläne der COW · Herstellerunterlagen der COW · letzter Prüfbericht eines PrüfSV"},"C9":{"antwort":"1. Herstellungsdatum des Akkus feststellen (max. 4 Jahre) 2. Ladestrom messen 3. AV abschalten 4. Akku von Anlage trennen 5. Ruhespannung messen 6. Akku wieder verbinden 7. Betriebsstrom messen 8. Alarmierungszustand herstellen 9. Alarmstrom messen 10. AV zuschalten 11. Erforderliche Kapazität C = 1,25 · (I1·t1 + I2·t2) mit t1 = Alarmierungszeit, t2 = Überbrückungszeit, I1 = Alarmstrom, I2 = Betriebsstrom 12. Vergleich mit Kapazitätsangabe auf dem Akku.\nHinweis aus dem Lösungsvorschlag: nach VDI 2053-1:2014-12 eine Stunde Alarmierungszeit, Akkus häufig 3,8 Ah."},"C10":{"antwort":"§16(3) M-GarVO"},"C11":{"antwort":"Geschlossene Mittel- und Großgaragen mit geringem Zu- und Abgangsverkehr, die die Anforderungen nach §16 (1 und 2) nicht erfüllen."},"C12":{"antwort":"Je 400 m² einen Sensor (Anordnung 1,5 m über OFF) · Datenlogger · Energieversorgung · Auswertungssoftware · Kalibriergas Nullpunkt (CO-freie Luft) · Kalibriergas über 100 ppm CO"},"C13":{"antwort":"Kontinuierliche Mittelwertbildung über je 30 Minuten; Vergleich mit dem Grenzwert 100 ppm für 30 Minuten."},"C14":{"antwort":"Justage/Kalibrierung der Sensoren · Aufbau der Messeinrichtung (Sensor, Datenlogger, Energieversorgung) in der Garage · Rückbau nach mehr als 30 Tagen · Auswertung der Messergebnisse · Gutachten erstellen"},"C15":{"antwort":"— im Lösungsvorschlag nicht beantwortet —"},"C16":{"antwort":"ACHTUNG, Formulierungsfehler im Lösungsvorschlag: dort steht bei Messwerten unter 100 ppm „Die Messwerte überschreiten die zulässige Grenze von 100 ppm als Halbstundenmittelwert. Der Funktionsnachweis für die natürliche Be- und Entlüftung der Garage entsprechend §16(2) M-GarVO ist erbracht.“ — Logisch muss es „überschreiten nicht“ heißen."},"C20":{"antwort":"Die Baugenehmigung muss auf den richtigen Prüfbericht verweisen, der Prüfbericht auf das richtige Brandschutzkonzept. Eingebauter Fehler im Protokoll: „Abweichend von §16 Abs. 3 M-GarVO ist für die geschlossene Mittelgarage eine CO-Warnanlage zu installieren.“ Richtig ist §16 Abs. 6 M-GarVO."},"C21":{"antwort":"§3 MBO (allgemeine Anforderungen) — das war die erwartete Antwort."},"C22":{"antwort":"Ein Brandabschnitt ist der Bereich eines Gebäudes zwischen seinen Außenwänden und/oder den Wänden, die als Brandwände über alle Geschosse ausgebildet sind."},"C23":{"antwort":"— im Protokoll keine Antwort festgehalten —"},"C24":{"antwort":"Sensor mit Prüfgas beaufschlagen, Kalibrieradapter, Volumenstrom 0,2 l/min einstellen; an der Zentrale Momentanwert und Endwert kontrollieren. Sensorhöhe im Protokoll nachgemessen: ca. 1,5 m."},"C25":{"antwort":"Im Protokoll war die Ursache: CO- und NO2-Sensor waren vertauscht. Der Prüfling hat das nicht erkannt und die Prüfung abgebrochen — das wurde ausdrücklich als „no go“ bewertet. Es sind alle geforderten Sensoren zu prüfen."},"C26":{"antwort":"Der Prüfling argumentierte, nur die 250-ppm-Stufe sei relevant, alles Weitere „nice to have“. Die Kommission war damit erkennbar NICHT zufrieden. Frage selbst sauber klären."},"C27":{"antwort":"Wurde theoretisch durchgegangen. Siehe C9."},"C28":{"antwort":"M-GarVO §16 Abs. 6, MVV TB Anhang 14, VDI 2053. Besonders wichtig war der Kommission der genaue Inhalt von Anhang 14."},"L1":{"antwort":"Baugenehmigung, Prüfbericht Brandschutz, BSK, Grundrisse/Schnitte. Weiter: Funktions-/Anlagenbeschreibung, Fachunternehmererklärung, Dimensionierung und Bemessung, Einweisungsprotokoll, Prüf- und Wartungsbuch, Vorgaben zu Wartung und Instandhaltung, Nachweis der Zertifizierung des Facherrichters, Montage- und Betriebsanleitungen, abP für Brandschutzklappen, Übereinstimmungserklärung zum abP für Lüftungsleitungen, abZ für den Ventilator in der Garage, Übereinstimmungserklärung für die BSK durch den Facherrichter."},"L2":{"antwort":"— im Protokoll keine Antwort festgehalten —"},"L3":{"antwort":"Überschriften/Aufbau wortwörtlich, Inhalte mit eigenen Worten. Genauer Wortlaut ist zu beschaffen."},"L4":{"antwort":"— im Protokoll keine Antwort festgehalten —"},"L5":{"antwort":"Abstand war ausreichend, brennbare Dämmung auf der Außenwand war der kritische Punkt (siehe MLüAR 5.1.2)."},"L6":{"antwort":"Schema sichten (welche Bereiche werden versorgt), Notwendigkeit einer Lüftungszentrale, Rauchauslöseeinrichtung (Prüfung mit Rauchspray, nicht mit Testknopf), Zulassung/Ü-Zeichen der Rauchauslöseeinrichtung, Ansteuerung BSK/Rauchschutzklappe, Reparaturschalter, innerer Zustand, Frostschutz, Laufüberwachung (Näherungsschalter auf der Welle)."},"L7":{"antwort":"abZ anfordern und mit Typenschild abgleichen (im Protokoll Diskrepanz zwischen Ausstellungsdatum abZ und Herstellungsjahr der BSK). Korrekten Einbau prüfen, insbesondere die Verschraubung des Einbausatzes mit Wand bzw. Metallständer. Zerstörungsfrei nicht prüfbar, daher Übereinstimmungserklärung des Errichters einfordern — darüber gab es Diskussion."},"L8":{"antwort":"Alles aus der MLüAR aufzählen; das genügte der Kommission."},"L9":{"antwort":"Gilt ebenfalls für Dämmschichten. Bei dünnen Dämmschichten war der Prüfling unsicher — Punkt gezielt nacharbeiten."},"L10":{"antwort":"— im Protokoll keine inhaltliche Antwort —"},"R1":{"antwort":"Baugenehmigung, Prüfbericht Brandschutz, BSK, Grundrisse/Schnitte. Ergänzend: Funktions-/Anlagenbeschreibung NRA und MRA, Fachunternehmererklärung, Dimensionierung der NRA, Einweisungsprotokoll, Prüf- und Wartungsbuch, Vorgaben zu Wartung und Instandhaltung, Nachweis der Zertifizierung des Facherrichters, Montage- und Betriebsanleitungen, Nachweis der werkseigenen Produktionskontrolle des Herstellers NRA, abP für Entrauchungsleitungen und Übereinstimmungserklärung dazu, abZ für den Entrauchungsventilator, Übereinstimmungserklärung für die Entrauchungsklappen durch den Facherrichter."},"R2":{"antwort":"— im Protokoll keine inhaltliche Antwort —"},"R3":{"antwort":"— Wortlaut ist zu beschaffen —"},"R4":{"antwort":"Abstände nach DIN 18232-2 und zusätzlich nach MVV TB."},"R5":{"antwort":"Heute CE + DoP erforderlich. Wesentliche Merkmale waren aufzuzählen — Inhalt im Protokoll nicht festgehalten."},"R6":{"antwort":"Handauslösung muss einrasten, damit die Stellung erkennbar ist; Magnetschalter wird von der RWA-Zentrale angesteuert, die das Signal von der BMA erhält. Bei Auslösung über BMA klären, dass nicht die Feuerwehr anrückt und der Hausalarm nicht auslöst."},"R7":{"antwort":"Nachströmung über Jalousieklappen in der Außenwand, stromlos offen."},"R8":{"antwort":"abZ einfordern, Einbau prüfen, Antriebsabdeckung (Promat) abschrauben und Antrieb kontrollieren. Im Protokoll war ein SEL-Antrieb verbaut statt des im abZ genannten SE-Antriebs — Mangel."},"R9":{"antwort":"Nach MVV TB Anhang 14 ist eine Bauartgenehmigung erforderlich; da jeder Raum anders ist, läuft es praktisch auf eine vBG hinaus — oder Verzicht durch die Bauaufsichtsbehörde."},"R10":{"antwort":"Bei der Wanddurchführung fehlten die umlaufenden Deckstreifen. Promatect-LS ist laut Leistungserklärung nur im Innenbereich zulässig — der Außenteil ist damit unabhängig von der Ausführung unzulässig."},"R11":{"antwort":"— im Protokoll keine inhaltliche Antwort —"},"A1":{"antwort":"Ein Brandabschnitt ist der Bereich eines Gebäudes zwischen seinen Außenwänden und/oder den Wänden, die als Brandwände über alle Geschosse ausgebildet sind.","fund":"Industriebaurichtline","pruef":"geprüft – bestätigt","datum":"2026-08-05"},"A2":{"antwort":"Rauchableitung dient in erster Linie der Unterstützung wirksamer Löscharbeiten der Feuerwehr. ","fund":"MVVTB"},"A3":{},"A4":{},"A5":{},"A6":{},"A7":{},"A8":{},"A9":{},"A10":{},"A11":{},"A12":{},"A13":{},"A14":{},"A15":{},"A16":{},"A17":{},"A18":{},"A19":{},"A20":{},"A21":{},"A22":{},"A23":{},"D1":{},"D2":{},"D3":{},"D4":{},"D5":{},"D6":{},"D7":{},"D8":{},"D9":{},"D10":{},"D11":{},"D12":{},"D13":{},"D14":{},"D15":{},"B1":{},"B2":{"antwort":"Aus dem Protokoll 2025: Baugenehmigung mit Stand, Brandschutzkonzept, Leistungserklärungen, Nachweise, Grundrisse, Schemata. Fehlt eines, kann die Anlage hinsichtlich Wirksamkeit, Betriebssicherheit und bestimmungsgemäßem Zusammenwirken nicht abschließend beurteilt werden."},"B3":{"antwort":"a) Wird in sehr früher Planungsphase verlangt und beschreibt die grundsätzliche funktionale Steuerung, Interaktion und Überwachung sicherheitsrelevanter Anlagen und Quellen (Sensoren), insbesondere im Brandfall; stimmt Schutzziele und Wirkprinzipien des Brandschutznachweises ab.\nb) Räumliche Zuordnung in Auslösebereiche sowie Koordination und Aktivierung von BMA, RAA und Fluchtwegsteuerungen.\nc) Grundlage für die Brandfallsteuermatrix gemäß VDI 6010 Blatt 1."},"B4":{"antwort":"Protokollnotiz 2025: Es sind die wesentlichen Merkmale eines Bauprodukts und die Verfahren und Kriterien für die Bewertung der Leistung in Bezug auf die wesentlichen Merkmale festgelegt. (Antwort im Protokoll unscharf — prüfen!)"},"B5":{},"B6":{"antwort":"Technische Baubestimmungen konkretisieren die Anforderungen an bauliche Anlagen, z. B. durch Verweise auf Normen und andere technische Regeln. Sie enthalten technische Regeln für Planung, Bemessung und Ausführung von Bauwerken sowie für Bauprodukte."},"B7":{"antwort":"Die ETA ist ein Produktnachweis, der zur CE-Kennzeichnung führt. Sie ermöglicht, Bauprodukte europaweit zu vermarkten, wenn sie nicht oder nicht vollständig von einer harmonisierten Norm erfasst sind."},"B8":{},"B9":{},"B10":{"antwort":"Protokollnotiz 2025: Nein, nach §2 Abs. 4 MBO sind Garagen vom Sonderbau ausgenommen; Mittel- und Großgaragen (Nutzfläche über 100 m²) werden jedoch bezüglich einer Reihe von Anforderungen und Verfahren zusammen mit Sonderbauten genannt. (Formulierung prüfen — §2 Abs. 4 Nr. 10 MBO nennt Garagen ausdrücklich.)"},"B11":{"antwort":"Protokollnotiz 2025: Ja, der Brandschutznachweis muss durch einen Prüfsachverständigen für Brandschutz bescheinigt sein. (Begründung über MPrüfVO nachziehen.)"},"B12":{},"B13":{},"B14":{},"B15":{},"B16":{"antwort":"Hinweise aus dem Protokoll: Bettenzimmer war als Kongresshotel bezeichnet; statt „Gaststätte“ standen Begriffe da, aus denen der Tatbestand abzuleiten war; die Markierung der Wände 4 und 5 ging über die Hausecke hinaus."},"E1":{},"E2":{},"E3":{},"E4":{},"E5":{},"E6":{},"E7":{},"E8":{},"E9":{},"E10":{},"E11":{},"E12":{"antwort":"Messwerte (Pa) über Einstecktiefen 80/240/400/560/720 mm: 60 → 5,1 5,5 5,5 5,8 5,6 | 120 → 5,6 6,1 5,6 5,9 4,9 | 300 → 6,4 4,9 5,8 5,8 4,8 | 420 → 4,3 5,1 5,7 5,7 5,7 | 540 → 5,5 5,6 6,2 5,4 5,5"},"E13":{},"E14":{},"E15":{},"E16":{},"E17":{},"F1":{},"F2":{},"F3":{},"G1":{},"G2":{},"G3":{},"G4":{},"G5":{},"G6":{},"G7":{},"G8":{},"G9":{},"G10":{},"G11":{},"G12":{},"G13":{},"G14":{},"G15":{},"H1":{},"H2":{},"H3":{},"H4":{},"H5":{},"H6":{},"H7":{},"H8":{},"H9":{},"H10":{},"H11":{},"H12":{},"H13":{},"I1":{},"I2":{},"I3":{"antwort":"Protokollhinweis: Bei den Wandabschnitten an den Zimmern 1 und 2 ist es definitiv Bauart Brandwand; beim Wandabschnitt im Flur war strittig, ob Brandwand oder feuerhemmend."},"I4":{},"I5":{"antwort":"Protokollhinweis: In der Aufgabenstellung stand 5.1.3, das war ein Fehler."},"I6":{},"I7":{},"I8":{},"I9":{"antwort":"Protokollhinweis: Breite über 20 m, Abstand 1 bis 3 jeweils ca. 3 m, zwischen O3 und S1 über 20 m (ca. 28 m). Erlaubte Unterlagen in dieser Prüfung: MBO, VV TB, LüAR, GarVO, DIN 1946-4, DIN EN 12599, DIN 16798-1, VDI 2053."},"J1":{"antwort":"§31 M-PPVO Aufgabenerledigung: Die PSV bescheinigen die Übereinstimmung der technischen Anlagen mit den öffentlich-rechtlichen Anforderungen im Sinne der §§1 und 2 MPrüfVO. Werden festgestellte Mängel nicht in der festgelegten Frist beseitigt, haben sie die Bauaufsichtsbehörde zu unterrichten."},"J2":{"antwort":"Dafür, dass die an der einzelnen Anlage durchgeführten Prüfungen nach Art und Umfang notwendig und hinreichend sind."},"J3":{"antwort":"Muster-Prüfgrundsätze Ziffer 1: Sofern keine genehmigungsbedürftige Abweichung vom genehmigten Brandschutzkonzept vorliegt, ist die wiederkehrende Prüfung als Erstprüfung durchzuführen."},"J4":{"antwort":"a) Nein. b) Die Prüfung kann in der Baugenehmigung gefordert sein (mit Prüfbericht Brandschutz als Bestandteil); besondere Anforderungen nach §51 MBO in Sonderbauten."},"J5":{"antwort":"Verwendbarkeitsnachweis wird für Bauprodukte erteilt, Anwendbarkeitsnachweis für Bauarten."},"J6":{"antwort":"a) Antrag auf Abweichung nach §67 Abs. 1 MBO, da von technischen Baubestimmungen gemäß §85a MBO abgewichen wird. b) MBO bzw. MVV TB Abschnitt A 2 Brandschutz (A 2.2.2.5)."},"J7":{"antwort":"Die Prüfung kann durchgeführt werden, jedoch können Wirksamkeit, Betriebssicherheit und Zusammenwirken nicht abschließend bescheinigt werden, weil die bauordnungsrechtlichen Anforderungen mangels Brandschutznachweis und Prüfbericht nicht bekannt sind."},"J8":{"antwort":"Die jeweilige Landesbauordnung und die MVV TB."},"J9":{"antwort":"a) Übereinstimmungsbestätigung (§21 MBO) mit einer technischen Regel der Technischen Baubestimmungen, der abZ, dem abP oder der Zustimmung im Einzelfall. b) Ü-Zeichen. c) Der Hersteller."},"J10":{"antwort":"a) Der Inhaber des Verwendbarkeitsnachweises (Hersteller). b) In der Übereinstimmungsbestätigung. c) Nein, gutachterliche Stellungnahmen sind laut DIBt keine Verwendbarkeitsnachweise. d) Zustimmung im Einzelfall (ZiE)."},"J11":{"antwort":"abZ: Produkteigenschaften und Zusammensetzung, Kennzeichnung, werkseigene Produktionskontrolle, ggf. Fremdüberwachung, Übereinstimmungsbestätigung des Herstellers.\naBG: Planung, Bemessung, Ausführung; zu verwendende Bauprodukte mit Verweis auf Norm, abZ, abP, ETA; Bauteile, in denen die Bauart errichtet werden darf; Bestimmungen für den Einbau; Kennzeichnung der Bauart; Übereinstimmungserklärung des Errichters; Bestimmungen für Nutzung und Nachbelegung."},"J12":{"antwort":"Für Bauarten, die von technischen Baubestimmungen nach §85a MBO wesentlich abweichen und für die es keine aaRdT gibt. Verantwortlich: aBG das DIBt, vBG die oberste Bauaufsicht."},"J13":{"antwort":"a) CE-Kennzeichnung. b) Leistungserklärung (DoP), Gebrauchsanleitung inkl. Betriebs- und Montageanleitung."},"J14":{"antwort":"In der allgemeinen Bauartgenehmigung (aBG) der Abschottung."},"J15":{"antwort":"leicht entflammbar, normal entflammbar, schwer entflammbar, nicht brennbar; national A2; international A2-s1, d0."},"J16":{"antwort":"Brandschutztechnisch abgegrenzte Einheiten, die gegeneinander geschützt sind und den Feuerwehreinsatz durch räumlich definierte Abschnitte begünstigen. Begrenzung in der Regel durch raumabschließende Bauteile wie Trennwände und Geschossdecken (MBO:2016-05)."},"J17":{"antwort":"MBO:2016-05 §29 Abs. 1-3, §31. a) Trennwände und Decken. b) Von der Gebäudeklasse."},"J18":{"antwort":"a) Oberkante Fußboden oberirdischer Geschosse, in denen Aufenthaltsräume möglich sind, bis 7 m über Geländeoberfläche. b) GK 1-3."},"J19":{"antwort":"Höhe der Fußbodenoberkante des höchsten Geschosses mit möglichen Aufenthaltsräumen über der mittleren Geländeoberfläche, Anzahl und Größe der Nutzungseinheiten, freistehend oder nicht, land- und forstwirtschaftlich genutzte Gebäude, unterirdische Gebäude."},"J20":{},"K1":{},"K2":{},"K3":{},"K4":{},"K5":{},"K6":{},"K7":{},"K8":{},"K9":{},"K10":{},"K11":{},"K12":{},"K13":{},"K14":{},"K15":{},"K16":{},"K17":{},"K18":{},"M1":{},"M2":{},"M3":{},"M4":{},"M5":{},"M6":{},"M7":{},"N1":{},"N2":{},"N3":{},"N4":{},"N5":{},"N6":{},"N7":{},"N8":{},"N9":{},"N10":{},"N11":{},"N12":{},"N13":{},"N14":{},"N15":{},"N16":{},"N17":{},"N18":{},"N19":{}};</script></head>
+<body>
+
+<header>
+  <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <h1>BBIK Prüfsachverständige</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="dirty" class="meta">gesichert</span>
+      <button id="btnSave" style="border-color:var(--ok);color:#a6e3ac;font-weight:600">Datei speichern</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab" data-tab="lernen">Karteikarten</div>
+    <div class="tab on" data-tab="fragen">Werkbank (<span id="cnt">0</span>)</div>
+    <div class="tab" data-tab="podcast">Podcast-Auswahl</div>
+    <div class="tab" data-tab="speichern">Speichern &amp; Diagnose</div>
+    <div class="tab" data-tab="normen">Normen</div>
+    <div class="tab" data-tab="offen">Offene Punkte</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div id="vorschau" style="display:none;background:#4a1418;border:2px solid var(--bad);border-radius:8px;padding:14px 16px;margin-bottom:16px">
+  <b style="color:#ffb4ae;font-size:17px">Diese Datei läuft gerade in einer Vorschau und kann hier nichts speichern.</b>
+  <div style="margin-top:8px">Die Vorschau ist ein abgeschotteter Rahmen ohne Schreibrechte. Alles, was du hier einträgst, ist beim Schließen weg.</div>
+  <div style="margin-top:10px"><b>So arbeitest du damit:</b>
+    <ol style="margin:6px 0 0 20px">
+      <li>Diese Datei herunterladen — über das Download-Symbol an der Datei im Chat.</li>
+      <li>Die heruntergeladene Datei im Dateimanager doppelklicken; sie öffnet sich im Browser.</li>
+      <li>Dort trägst du ein und speicherst mit Strg+S. Ab da bleibt alles erhalten.</li>
+    </ol>
+  </div>
+  <div style="margin-top:10px">Am Rechner in Chrome oder Edge überschreibt Strg+S dieselbe Datei wie in jedem Programm. In Firefox und Safari landet die neue Fassung im Download-Ordner und ersetzt die alte.</div>
+</div>
+
+<!-- ================= KARTEIKARTEN ================= -->
+<section id="lernen" style="display: none;">
+  <div class="bar">
+    <select id="kTopic"><option value="">Alle Fachgebiete</option></select>
+    <select id="kQuelle"><option value="2">Alle Karten mit Antwort</option><option value="1">Nur bestätigte Antworten</option><option value="4">Nur noch nicht kontrollierte</option><option value="3">Alle Fragen, auch leere</option></select>
+    <select id="kFaellig"><option value="1">Nur fällige Karten</option><option value="2">Alle Karten des Stapels</option></select>
+    <button id="kStart">Stapel neu mischen</button>
+    <span class="stats" id="kStats"></span>
+  </div>
+  <div class="boxes" id="kBoxes"></div>
+  <div id="kkbox">
+    <div class="kk" id="kk"><div class="frage" id="kFrage">Stapel wird geladen …</div><div id="kAntwort"></div></div>
+    <div class="kkbar" id="kBar"></div>
+    <div class="kkhint">Leertaste = aufdecken · 1 = nicht gewusst · 2 = wackelig · 3 = gewusst</div>
+  </div>
+</section>
+
+<!-- ================= WERKBANK ================= -->
+<section id="fragen" style="">
+  <div class="bar">
+    <input type="search" id="search" placeholder="Volltextsuche …">
+    <select id="fTopic"><option value="">Alle Fachgebiete</option></select>
+    <select id="fSrc"><option value="">Alle Quellen</option></select>
+    <select id="fPruef"><option value="">Alle Prüfstatus</option></select>
+    <select id="group"><option value="t">Gruppieren: Fachgebiet</option><option value="s">Gruppieren: Quelle</option><option value="">Keine Gruppierung</option></select>
+  </div>
+  <div class="bar">
+    <button id="expJson">Sicherung exportieren (JSON)</button>
+    <button id="impBtn">Sicherung einlesen</button>
+    <input type="file" id="imp" accept=".json,.md" style="display:none">
+    <button id="expMdAll">Alles exportieren (Markdown)</button>
+    <span class="stats" id="stats"></span>
+  </div>
+  <div class="warnbox">Protokollantworten sind <b>ungeprüft</b> und teilweise nachweislich falsch. Eigene Antwort ins große Feld, dann Prüfstatus setzen. Nur bestätigte Antworten landen im Karteikartenstapel und im Podcast.</div>
+  <div id="list"></div>
+</section>
+
+<!-- ================= PODCAST ================= -->
+<section id="podcast" style="display:none">
+  <div class="warnbox">Hier wählst du aus, woraus die nächste Podcast-Folge entstehen soll. Der Export ist eine Markdown-Datei, die du mir in den Chat lädst — daraus baue ich das Sprechskript. Vorgeschlagen sind die bestätigten Antworten; unbestätigte kannst du dazunehmen, dann steht im Export ausdrücklich, dass sie ungeprüft sind.</div>
+  <div class="bar">
+    <select id="pTopic"><option value="">Alle Fachgebiete</option></select>
+    <button id="pAllC">Alle bestätigten auswählen</button>
+    <button id="pNone">Auswahl leeren</button>
+    <input id="pTitel" placeholder="Titel der Folge, z. B. CO-Warnanlagen Teil 2" style="min-width:260px">
+    <button id="pExp">Podcast-Auftrag exportieren</button>
+    <span class="stats" id="pStats"></span>
+  </div>
+  <div id="pList"></div>
+</section>
+
+<section id="speichern" style="display:none">
+  <h2>Was dein Browser erlaubt</h2>
+  <div id="diag" class="sel" style="font-family:ui-monospace,Menlo,monospace;font-size:14px;line-height:1.9">Adresse: file://(lokale Datei)<br><span style="color:var(--ok)">JA </span>  außerhalb einer Vorschau geöffnet<br><span style="color:var(--ok)">JA </span>  Direktes Überschreiben der Datei möglich (Chrome/Edge)<br><span style="color:var(--ok)">JA </span>  Browserspeicher nutzbar — hält den Stand beim Neuladen<br><span style="color:var(--ok)">JA </span>  Datei-Erzeugung möglich<br><span style="color:var(--ok)">JA </span>  Zwischenablage nutzbar<br><span style="color:var(--ok)">JA </span>  Diese Datei enthält einen gespeicherten Stand<br>Erfasste Einträge im Arbeitsspeicher: 78</div>
+  <div class="bar">
+    <button id="dTest" style="border-color:var(--acc)">Prüfung erneut ausführen</button>
+    <button id="dSave" style="border-color:var(--ok);color:#a6e3ac">Jetzt speichern versuchen</button>
+  </div>
+  <div id="dLog" class="warnbox" style="display:none;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:13px"></div>
+
+  <h2>Sicherung von Hand — funktioniert immer</h2>
+  <p>Auf den Knopf drücken, den gesamten Inhalt des Feldes markieren und in eine Textdatei einfügen. Das ist unabhängig von jeder Browsereinstellung.</p>
+  <div class="bar"><button id="mShow">Stand anzeigen</button><button id="mCopy">In Zwischenablage</button></div>
+  <textarea id="mBox" style="width:100%;height:130px;margin-top:8px" placeholder="Hier erscheint dein Stand. Zum Zurückholen: gesicherten Text hier einfügen und unten übernehmen."></textarea>
+  <div class="bar"><button id="mLoad" style="border-color:var(--warn)">Eingefügten Stand übernehmen</button></div>
+</section>
+
+<section id="normen" style="display:none"></section>
+<section id="offen" style="display:none"></section>
+
+</div>
+<div class="saveflag" id="flag">Änderungen mit „Datei speichern“ oder Strg+S sichern</div>
+
+<script>
+const SRC={
+ S1:{n:"COW schriftlich 2026",f:"Gedächtnisprotokoll_COW_schriftlich_2026_BBIK.pdf + Lösungsvorschlag"},
+ S2:{n:"COW mündlich 06/2024",f:"Gedächtnisprotokoll_COW.pdf"},
+ S3:{n:"LTA mündlich 06/2024",f:"Gedächtnisprotokoll_RLT.pdf"},
+ S4:{n:"RWA mündlich 06/2024",f:"Gedächtnisprotokoll_RWA.pdf"},
+ S5:{n:"RAA schriftlich 02/2025",f:"Gedächtnisprotokoll_BBIK_RAA_2025.pdf — 70 P."},
+ S6:{n:"DBA/RDA schriftlich 2025",f:"Gedächtnisprotokoll_BBIK_DBA_2025.pdf"},
+ S7:{n:"BauOR schriftlich 02/2025",f:"Gedächtnisprotokoll_BBIK_BauOR_2025.pdf — 30 P."},
+ S8:{n:"LTA + BauOR 2025 (digital)",f:"Gedächtnisprotokoll_BBIK_LTA_BauOR_2025.pdf"},
+ S9:{n:"Baurecht 04.02.2025",f:"20250204_BBIK_Baurecht.pdf — mit Antwortnotizen"},
+ S10:{n:"Bauordnungsrecht 06.02.2024",f:"20240206_Bauordnungsrecht_BBIK.pdf"},
+ S11:{n:"Baurecht Januar 2024",f:"fotoPotsdamBBIK_GPBaurecht2024schriftlich_anonym.pdf — 70 min"},
+ S12:{n:"LTA schriftlich 2024",f:"PotsdamBBIK_GPLTA2024schriftlich_anonym.pdf — 70 P., 170 min"},
+ S13:{n:"Baurecht 2023",f:"20230206_BBIK_Baurecht.pdf — mit Antworten"},
+ S14:{n:"Baurecht 2022 (Kurzfassung)",f:"BBIK_Baurecht.pdf"},
+ S15:{n:"Baurecht 2022 (ausführlich)",f:"BBIK_Baurecht_2022.pdf — 40 P., 90 min"},
+ S16:{n:"Baurecht 23.02.2021",f:"20210223_BBIK_Baurecht.pdf — 40 P., 90 min"},
+ S17:{n:"Allgemeiner Teil 2021",f:"Gedächtnisprotokoll_BBiK_Prüfung_2021_Allgemein_MBA_FP.pdf"},
+ S18:{n:"Baurecht 2020",f:"202003_BBIK_Klausur_Baurecht.pdf"},
+ S19:{n:"Allgemeiner Teil 02.03.2020",f:"Gedächtnisprotokoll_BBiK_Allgemein_02_03_2020_final.pdf"}
+};
+const Q=[
+/* ===== COW schriftlich 2026 ===== */
+{i:"C1",s:"S1",t:"COW",p:6,q:"Nennen Sie die bauordnungsrechtlichen Prüfgrundlagen für Prüfsachverständige.",a:"Baugenehmigung · Brandschutzkonzept inkl. Prüfbericht zum BSK · MBO · M-GarVO · M-SonderbauVO · M-Richtlinien · MPrüfVO · MPPVO · MVV TB · An- und Verwendbarkeitsnachweise"},
+{i:"C2",s:"S1",t:"COW",p:15,q:"Welche Anforderungen werden bauordnungsrechtlich und durch anerkannte Regeln der Technik an CO-Warnanlagen gestellt? Zitieren Sie die jeweiligen Passagen und geben Sie diese mit eigenen Worten wieder.",a:"M-GarVO §16(6): geschlossene Großgaragen mit nicht geringem Zu- und Abgangsverkehr benötigen COW; bei 250 ppm Blinkzeichen und Signal über Lautsprecher; Offenhaltung der Ausfahrten; Anschluss an SSV.\nMVV TB Anhang 14 Abschnitt 9: Messstelle 1,50 m; Signalisierung für die Dauer der Grenzwertüberschreitung; aaRdT sind zu berücksichtigen.\nVDI 2053-1:2014-12: Warnung (60 ppm über 15 min, 120 ppm über 2 min) und Steuerung der Lüftung; je 400 m² ein Sensor; je 500 m² ein Transparent; je Rettungsweg/Brandabschnitt ein akustisches Signal; Gerät und Sensoren nach DIN EN 50545-1; Messstelle 1,50 m; Störungsanzeige zusätzlich bei Garagenaufsicht; Garagenabluft ggf. auf max. Stufe; akustisches Signal quittierbar, nach zwei Minuten selbsttätig aus; Ersatzstromquelle über eine Stunde."},
+{i:"C3",s:"S1",t:"COW",p:6,q:"Unter welchen Voraussetzungen sind zusätzliche Funktionen von CO-Warnanlagen möglich und wo werden diese geregelt?",a:"Baurechtlich: Offenhaltung der Ausfahrten (M-GarVO §16(6)) oder Auflagen, z. B. Ampelschaltung, Alarmweiterleitung, diverse Steuerfunktionen (Baugenehmigung).\nNormativ/freiwillig: Lüftungssteuerung nach VDI 2053-1:2014-12 — 30..40 / 60..80 / 100 ppm."},
+{i:"C4",s:"S1",t:"COW",p:3,q:"Wann dürfen Prüfsachverständige die Nutzung eines Gebäudes untersagen?",a:"Nie."},
+{i:"C5",s:"S1",t:"COW",p:2,q:"Kann von einer Muster-Richtlinie abgewichen werden und welches Verfahren ist hierfür notwendig?",a:"Ja, Abweichung nach §85a MBO bzw. §67 MBO bei Fußnote 2 im Abschnitt A2 MVV TB."},
+{i:"C6",s:"S1",t:"COW",p:3,q:"Wie können Sie von einer Technischen Baubestimmung abweichen?",a:"Soweit das bauordnungsrechtliche Schutzziel auf andere Art und Weise erfüllt werden kann, darf mittels Beschreibung in der technischen Fachplanung oder dem Brandschutzkonzept hinsichtlich Planung, Bemessung und Ausführung abgewichen werden — §85a MBO."},
+{i:"C7",s:"S1",t:"COW",p:5,q:"Ist ein Funktionserhalt für die Leitungen einer CO-Warnanlage notwendig? Begründen Sie Ihre Antwort.",a:"Nein. Anforderungen hinsichtlich Funktionserhalt nur über MLAR oder M-GarVO, für COW dort aber nicht enthalten."},
+{i:"C8",s:"S1",t:"COW",p:14,q:"Welche Unterlagen benötigen Sie vom Betreiber für die Prüfung und Prüfberichtserstellung einer CO-Warnanlage?",a:"Baugenehmigung · BSK inkl. Prüfbericht zum BSK · Pläne und Schnitte der Garage (BSK) · Instandhaltungsnachweis · Pläne der COW · Herstellerunterlagen der COW · letzter Prüfbericht eines PrüfSV"},
+{i:"C9",s:"S1",t:"COW",p:10,q:"Sie prüfen die Sicherheitsstromversorgung an einer CO-Warnanlage. Welche bauordnungsrechtlichen Anforderungen werden gestellt? Geben Sie die notwendigen Prüfschritte an inkl. der Berechnung der notwendigen Kapazität, führen Sie die Berechnung mit bekannten Werten durch und formulieren Sie eine abschließende Bewertung für den Prüfbericht.",a:"1. Herstellungsdatum des Akkus feststellen (max. 4 Jahre) 2. Ladestrom messen 3. AV abschalten 4. Akku von Anlage trennen 5. Ruhespannung messen 6. Akku wieder verbinden 7. Betriebsstrom messen 8. Alarmierungszustand herstellen 9. Alarmstrom messen 10. AV zuschalten 11. Erforderliche Kapazität C = 1,25 · (I1·t1 + I2·t2) mit t1 = Alarmierungszeit, t2 = Überbrückungszeit, I1 = Alarmstrom, I2 = Betriebsstrom 12. Vergleich mit Kapazitätsangabe auf dem Akku.\nHinweis aus dem Lösungsvorschlag: nach VDI 2053-1:2014-12 eine Stunde Alarmierungszeit, Akkus häufig 3,8 Ah."},
+{i:"C10",s:"S1",t:"COW",p:3,q:"CO-Langzeitmessung: Auf welcher Grundlage kann eine solche Messung durchgeführt werden?",a:"§16(3) M-GarVO"},
+{i:"C11",s:"S1",t:"COW",p:3,q:"CO-Langzeitmessung: In welchen Garagen können Sie eine CO-Langzeitmessung vornehmen?",a:"Geschlossene Mittel- und Großgaragen mit geringem Zu- und Abgangsverkehr, die die Anforderungen nach §16 (1 und 2) nicht erfüllen."},
+{i:"C12",s:"S1",t:"COW",p:4,q:"CO-Langzeitmessung: Welche Materialien und Geräte benötigen Sie?",a:"Je 400 m² einen Sensor (Anordnung 1,5 m über OFF) · Datenlogger · Energieversorgung · Auswertungssoftware · Kalibriergas Nullpunkt (CO-freie Luft) · Kalibriergas über 100 ppm CO"},
+{i:"C13",s:"S1",t:"COW",p:5,q:"CO-Langzeitmessung: Wie werten Sie die Messergebnisse aus und ordnen diese ein?",a:"Kontinuierliche Mittelwertbildung über je 30 Minuten; Vergleich mit dem Grenzwert 100 ppm für 30 Minuten."},
+{i:"C14",s:"S1",t:"COW",p:10,q:"CO-Langzeitmessung: Nennen Sie die einzelnen Prüfschritte.",a:"Justage/Kalibrierung der Sensoren · Aufbau der Messeinrichtung (Sensor, Datenlogger, Energieversorgung) in der Garage · Rückbau nach mehr als 30 Tagen · Auswertung der Messergebnisse · Gutachten erstellen"},
+{i:"C15",s:"S1",t:"COW",p:5,q:"CO-Langzeitmessung: Welche Aussagen können Sie bezüglich der Messung im Prüfbericht formulieren?",a:"— im Lösungsvorschlag nicht beantwortet —"},
+{i:"C16",s:"S1",t:"COW",p:6,q:"CO-Langzeitmessung: Formulieren Sie eine abschließende Bewertung in einem Prüfbericht.",a:"ACHTUNG, Formulierungsfehler im Lösungsvorschlag: dort steht bei Messwerten unter 100 ppm „Die Messwerte überschreiten die zulässige Grenze von 100 ppm als Halbstundenmittelwert. Der Funktionsnachweis für die natürliche Be- und Entlüftung der Garage entsprechend §16(2) M-GarVO ist erbracht.“ — Logisch muss es „überschreiten nicht“ heißen."},
+
+/* ===== COW mündlich 2024 ===== */
+{i:"C20",s:"S2",t:"COW",p:0,q:"Ordnungsprüfung: Ihnen liegen Baugenehmigung, Prüfbericht Brandschutz, Brandschutzkonzept sowie Grundrisse und Schnitte vor. Prüfen Sie auf Plausibilität und Vollständigkeit. Worauf kommt es bei den Verweisketten an?",a:"Die Baugenehmigung muss auf den richtigen Prüfbericht verweisen, der Prüfbericht auf das richtige Brandschutzkonzept. Eingebauter Fehler im Protokoll: „Abweichend von §16 Abs. 3 M-GarVO ist für die geschlossene Mittelgarage eine CO-Warnanlage zu installieren.“ Richtig ist §16 Abs. 6 M-GarVO."},
+{i:"C21",s:"S2",t:"BAU",p:0,q:"Was aus der MBO verweist auf eine CO-Warnanlage?",a:"§3 MBO (allgemeine Anforderungen) — das war die erwartete Antwort."},
+{i:"C22",s:"S2",t:"BAU",p:0,q:"Rettungswege in Garagen: wie lang? Brandabschnitte in Garagen: wie groß und unter welchen Bedingungen?",a:"— im Protokoll keine Antwort festgehalten —"},
+{i:"C23",s:"S2",t:"BAU",p:0,q:"Allgemeine Fragen zu Brandwänden, Trennwänden, Wänden notwendiger Flure und Nutzungseinheiten: Raumabschluss? In welcher Gebäudeklasse wie lange?",a:"— im Protokoll keine Antwort festgehalten —"},
+{i:"C24",s:"S2",t:"COW",p:0,q:"Praktische Prüfung: Wie prüfen Sie einen CO-Sensor? Beschreiben Sie Ablauf und Messwerte.",a:"Sensor mit Prüfgas beaufschlagen, Kalibrieradapter, Volumenstrom 0,2 l/min einstellen; an der Zentrale Momentanwert und Endwert kontrollieren. Sensorhöhe im Protokoll nachgemessen: ca. 1,5 m."},
+{i:"C25",s:"S2",t:"COW",p:0,q:"Ein Sensor reagiert beim Beaufschlagen mit Prüfgas nicht. Wie gehen Sie vor?",a:"Im Protokoll war die Ursache: CO- und NO2-Sensor waren vertauscht. Der Prüfling hat das nicht erkannt und die Prüfung abgebrochen — das wurde ausdrücklich als „no go“ bewertet. Es sind alle geforderten Sensoren zu prüfen."},
+{i:"C26",s:"S2",t:"COW",p:0,q:"Warum notieren Sie Sensoren und Schaltstufen an der Zentrale? Welche Schaltstufe ist bauordnungsrechtlich maßgeblich?",a:"Der Prüfling argumentierte, nur die 250-ppm-Stufe sei relevant, alles Weitere „nice to have“. Die Kommission war damit erkennbar NICHT zufrieden. Frage selbst sauber klären."},
+{i:"C27",s:"S2",t:"COW",p:0,q:"Simulieren Sie den Netzausfall inkl. Bestimmung der Batteriekapazität.",a:"Wurde theoretisch durchgegangen. Siehe C9."},
+{i:"C28",s:"S2",t:"COW",p:0,q:"Führen Sie alles auf, wo aus bauordnungsrechtlicher Sicht etwas zu CO-Warnanlagen steht, und geben Sie den Inhalt mit eigenen Worten wieder.",a:"M-GarVO §16 Abs. 6, MVV TB Anhang 14, VDI 2053. Besonders wichtig war der Kommission der genaue Inhalt von Anhang 14."},
+
+/* ===== LTA mündlich 2024 ===== */
+{i:"L1",s:"S3",t:"LTA",p:0,q:"Ordnungsprüfung Lüftungsanlage: Welche Unterlagen erwarten Sie und was prüfen Sie daran?",a:"Baugenehmigung, Prüfbericht Brandschutz, BSK, Grundrisse/Schnitte. Weiter: Funktions-/Anlagenbeschreibung, Fachunternehmererklärung, Dimensionierung und Bemessung, Einweisungsprotokoll, Prüf- und Wartungsbuch, Vorgaben zu Wartung und Instandhaltung, Nachweis der Zertifizierung des Facherrichters, Montage- und Betriebsanleitungen, abP für Brandschutzklappen, Übereinstimmungserklärung zum abP für Lüftungsleitungen, abZ für den Ventilator in der Garage, Übereinstimmungserklärung für die BSK durch den Facherrichter."},
+{i:"L2",s:"S3",t:"BAU",p:0,q:"Wo in der MBO gibt es Verweise zum Thema Lüftung?",a:"— im Protokoll keine Antwort festgehalten —"},
+{i:"L3",s:"S3",t:"BAU",p:0,q:"Was steht in der MVV TB im Anhang 14 zum Thema Lüftung? Die Überschriften bzw. der grundlegende Aufbau werden wortwörtlich erwartet.",a:"Überschriften/Aufbau wortwörtlich, Inhalte mit eigenen Worten. Genauer Wortlaut ist zu beschaffen."},
+{i:"L4",s:"S3",t:"BAU",p:0,q:"Unterschied nationale und internationale Bauprodukte? Welche gibt es? Wie bekomme ich Zulassung/Prüfzeugnis? Unterschied CE nach hEN und nach ETA?",a:"— im Protokoll keine Antwort festgehalten —"},
+{i:"L5",s:"S3",t:"LTA",p:0,q:"Praktisch: Fort- und Außenluftmündung an der Außenwand, brennbare Dämmung auf der Außenwand. Wie bewerten Sie das?",a:"Abstand war ausreichend, brennbare Dämmung auf der Außenwand war der kritische Punkt (siehe MLüAR 5.1.2)."},
+{i:"L6",s:"S3",t:"LTA",p:0,q:"Was ist an einer Lüftungsanlage im Rahmen der Prüfung durchzugehen?",a:"Schema sichten (welche Bereiche werden versorgt), Notwendigkeit einer Lüftungszentrale, Rauchauslöseeinrichtung (Prüfung mit Rauchspray, nicht mit Testknopf), Zulassung/Ü-Zeichen der Rauchauslöseeinrichtung, Ansteuerung BSK/Rauchschutzklappe, Reparaturschalter, innerer Zustand, Frostschutz, Laufüberwachung (Näherungsschalter auf der Welle)."},
+{i:"L7",s:"S3",t:"LTA",p:0,q:"Prüfung einer Brandschutzklappe Trox 321 in leichter Trennwand mit Metallständer und Einbausatz. Wie gehen Sie vor?",a:"abZ anfordern und mit Typenschild abgleichen (im Protokoll Diskrepanz zwischen Ausstellungsdatum abZ und Herstellungsjahr der BSK). Korrekten Einbau prüfen, insbesondere die Verschraubung des Einbausatzes mit Wand bzw. Metallständer. Zerstörungsfrei nicht prüfbar, daher Übereinstimmungserklärung des Errichters einfordern — darüber gab es Diskussion."},
+{i:"L8",s:"S3",t:"LTA",p:0,q:"Welche Besonderheiten sind bei Küchenabluft zu berücksichtigen?",a:"Alles aus der MLüAR aufzählen; das genügte der Kommission."},
+{i:"L9",s:"S3",t:"LTA",p:0,q:"Brennbare Leitungen nach MLüAR Abschnitt 3.2 — was gilt, auch für Dämmschichten und dünne Dämmschichten?",a:"Gilt ebenfalls für Dämmschichten. Bei dünnen Dämmschichten war der Prüfling unsicher — Punkt gezielt nacharbeiten."},
+{i:"L10",s:"S3",t:"LTA",p:0,q:"Begrenzung von Kräften (Türöffnungskräfte) — erläutern, Skizze wurde positiv aufgenommen.",a:"— im Protokoll keine inhaltliche Antwort —"},
+
+/* ===== RWA mündlich 2024 ===== */
+{i:"R1",s:"S4",t:"RAA",p:0,q:"Ordnungsprüfung RWA: Welche Unterlagen erwarten Sie für NRA und MRA?",a:"Baugenehmigung, Prüfbericht Brandschutz, BSK, Grundrisse/Schnitte. Ergänzend: Funktions-/Anlagenbeschreibung NRA und MRA, Fachunternehmererklärung, Dimensionierung der NRA, Einweisungsprotokoll, Prüf- und Wartungsbuch, Vorgaben zu Wartung und Instandhaltung, Nachweis der Zertifizierung des Facherrichters, Montage- und Betriebsanleitungen, Nachweis der werkseigenen Produktionskontrolle des Herstellers NRA, abP für Entrauchungsleitungen und Übereinstimmungserklärung dazu, abZ für den Entrauchungsventilator, Übereinstimmungserklärung für die Entrauchungsklappen durch den Facherrichter."},
+{i:"R2",s:"S4",t:"BAU",p:0,q:"Kennen Sie das Grundsatzpapier der Fachkommission Bauaufsicht zu „Rettung von Personen“ und „wirksame Löscharbeiten“ — bauordnungsrechtliche Schutzziele mit Blick auf die Entrauchung? Geben Sie den Inhalt wieder.",a:"— im Protokoll keine inhaltliche Antwort —"},
+{i:"R3",s:"S4",t:"RAA",p:0,q:"Was steht in der MVV TB Anhang 14 zum Thema Rauchabzugsanlagen? Überschriften wortwörtlich, danach Abschnitt Planung/Bemessung/Ausführung im Detail.",a:"— Wortlaut ist zu beschaffen —"},
+{i:"R4",s:"S4",t:"RAA",p:0,q:"Natürliche Entrauchung: Welche Abstände gibt es (NRWG)?",a:"Abstände nach DIN 18232-2 und zusätzlich nach MVV TB."},
+{i:"R5",s:"S4",t:"RAA",p:0,q:"Verbautes NRWG Fumilux 3000 von 2005 mit abP. Was ist heute erforderlich und welche wesentlichen Merkmale mit Mindestanforderungen hat ein aktuelles NRWG?",a:"Heute CE + DoP erforderlich. Wesentliche Merkmale waren aufzuzählen — Inhalt im Protokoll nicht festgehalten."},
+{i:"R6",s:"S4",t:"RAA",p:0,q:"Erklären Sie das Funktionsprinzip des Alarmkastens AK70 und die Auslösekette über BMA.",a:"Handauslösung muss einrasten, damit die Stellung erkennbar ist; Magnetschalter wird von der RWA-Zentrale angesteuert, die das Signal von der BMA erhält. Bei Auslösung über BMA klären, dass nicht die Feuerwehr anrückt und der Hausalarm nicht auslöst."},
+{i:"R7",s:"S4",t:"RAA",p:0,q:"Maschinelle Entrauchung mit zwei Rauchabschnitten: Was passiert bei Rauchdetektion in welchem Abschnitt — welche Entrauchungsklappen öffnen, welche schließen? Wie erfolgt die Nachströmung?",a:"Nachströmung über Jalousieklappen in der Außenwand, stromlos offen."},
+{i:"R8",s:"S4",t:"RAA",p:0,q:"Prüfung einer Entrauchungsklappe Trox EK1 (Z-78.2-13, Baujahr 2004), trocken in Massivwand. Wie gehen Sie vor?",a:"abZ einfordern, Einbau prüfen, Antriebsabdeckung (Promat) abschrauben und Antrieb kontrollieren. Im Protokoll war ein SEL-Antrieb verbaut statt des im abZ genannten SE-Antriebs — Mangel."},
+{i:"R9",s:"S4",t:"RAA",p:0,q:"Entrauchungsventilator innerhalb des Gebäudes, außerhalb der zu entrauchenden Abschnitte, in einem Raum mit weiteren Einrichtungen. Welche Nachweise fordern Sie?",a:"Nach MVV TB Anhang 14 ist eine Bauartgenehmigung erforderlich; da jeder Raum anders ist, läuft es praktisch auf eine vBG hinaus — oder Verzicht durch die Bauaufsichtsbehörde."},
+{i:"R10",s:"S4",t:"RAA",p:0,q:"Prüfung der Fortluft-Entrauchungsleitung (Promat) mit horizontalem Teil, Wanddurchführung und vertikalem Teil im Freien.",a:"Bei der Wanddurchführung fehlten die umlaufenden Deckstreifen. Promatect-LS ist laut Leistungserklärung nur im Innenbereich zulässig — der Außenteil ist damit unabhängig von der Ausführung unzulässig."},
+{i:"R11",s:"S4",t:"RAA",p:0,q:"Skizziertes Szenario maschinelle Entrauchung mit unterschiedlichen Rauchabschnitten: Welche Bauprodukte bzw. Bauarten werden mindestens benötigt? Anschließend: baulicher Funktionserhalt und Funktionserhalt über Bauprodukte.",a:"— im Protokoll keine inhaltliche Antwort —"},
+
+/* ===== RAA schriftlich 2025 ===== */
+{i:"A1",s:"S5",t:"RAA",p:0,q:"Definieren Sie den Begriff Brandabschnitt.",a:""},
+{i:"A2",s:"S5",t:"RAA",p:0,q:"Erklären Sie den Begriff Rauchableitung aus bauordnungsrechtlicher Sicht.",a:""},
+{i:"A3",s:"S5",t:"RAA",p:0,q:"Industriebau nach M-IndBauRL 2019 ohne Abweichungen, Halle 80 × 50 m, keine Ebenen, keine Sprinklerung, natürliche RWA, pneumatische Auslösung über CO2, 8 Lichtkuppeln im Dach je 1,5 × 2,5 m, aerodynamische Fläche je Kuppel 2,4375 m². — 3.1 Welchen Produktnormen müssen die Lichtkuppeln entsprechen?",a:""},
+{i:"A4",s:"S5",t:"RAA",p:0,q:"Industriebau (siehe A3): Ist die Dimensionierung der Anlage ausreichend?",a:""},
+{i:"A5",s:"S5",t:"RAA",p:0,q:"Industriebau (siehe A3): Müssen nach der vorliegenden technischen Baubestimmung Rauchabschnitte gebildet werden?",a:""},
+{i:"A6",s:"S5",t:"RAA",p:0,q:"Industriebau (siehe A3): Müssen Auslösegruppen gebildet werden? Wenn ja, wie viele?",a:""},
+{i:"A7",s:"S5",t:"RAA",p:0,q:"Industriebau (siehe A3): Zuluftnachströmung über 4 geschlossene Sektionaltore mit elektrischen Antrieben, zusätzlich über Kettenzüge zu öffnen. Welche Anforderungen bestehen an die elektrischen Antriebe der Tore?",a:""},
+{i:"A8",s:"S5",t:"RAA",p:0,q:"Industriebau (siehe A3): Wo müssen nach der anzuwendenden technischen Baubestimmung die Geräte angeordnet werden?",a:""},
+{i:"A9",s:"S5",t:"RAA",p:0,q:"Luftkanal 600 × 300 mm: Berechnen Sie den hydraulischen Durchmesser.",a:""},
+{i:"A10",s:"S5",t:"RAA",p:0,q:"Luftkanal 600 × 300 mm: Bestimmen Sie den Druckverlust für eine Länge von 20 m (Diagramm mit k-Kurven, Rauhigkeit Blechkanal ca. 1,15 mm, Volumenstrom in m³/h, hydraulisch glatte Rohre).",a:""},
+{i:"A11",s:"S5",t:"RAA",p:0,q:"Erklären Sie den Unterschied zwischen „hydraulischem Durchmesser“ und „gleichwertigem Durchmesser“.",a:""},
+{i:"A12",s:"S5",t:"RAA",p:0,q:"Verkaufsstätte mit 1500 m² Fläche inklusive Ladenstraßen: Unter welchen Bedingungen werden Rauchabzugsanlagen prüfpflichtig?",a:""},
+{i:"A13",s:"S5",t:"RAA",p:0,q:"Ventilator fördert bei 2400 1/min einen Volumenstrom von 5000 m³/h. Wie muss die Drehzahl geändert werden für a) 6000 m³/h, b) 4000 m³/h?",a:""},
+{i:"A14",s:"S5",t:"RAA",p:0,q:"MVV-TB-Aufgabe: Was ist der Zweck von Rauchabzugsanlagen?",a:""},
+{i:"A15",s:"S5",t:"RAA",p:0,q:"MVV-TB-Aufgabe: Ist die DIN-Reihe 18232 für die Auslegung von RAA anwendbar?",a:""},
+{i:"A16",s:"S5",t:"RAA",p:0,q:"MVV-TB-Aufgabe: Beschreiben Sie die Bestandteile einer natürlichen RAA.",a:""},
+{i:"A17",s:"S5",t:"RAA",p:0,q:"MVV-TB-Aufgabe: Welche allgemein anerkannte Regel der Technik gilt für maschinelle Rauchabzugsgeräte?",a:""},
+{i:"A18",s:"S5",t:"RAA",p:0,q:"MVV-TB-Aufgabe: Was bedeutet „Druckstufe 1“ bei Entrauchungsleitungen?",a:""},
+{i:"A19",s:"S5",t:"RAA",p:0,q:"MVV-TB-Aufgabe: Nennen Sie die wesentlichen Merkmale eines natürlichen Rauch- und Wärmeabzugsgerätes.",a:""},
+{i:"A20",s:"S5",t:"RAA",p:0,q:"MVV-TB-Aufgabe: Für welche und an welchem Ort einzusetzenden Bauteile gilt Tabelle 5, Anhang 14 Abschnitt 7 der MVV TB?",a:""},
+{i:"A21",s:"S5",t:"RAA",p:0,q:"Wie hoch dürfen die Türöffnungskräfte bei einer allgemeinen Lüftungsanlage und bei einer maschinellen Rauchabzugsanlage maximal sein? Geben Sie auch die Fundstelle an.",a:""},
+{i:"A22",s:"S5",t:"RAA",p:0,q:"Natürliche RAA wird über CO2-Zylinder geöffnet, derselbe Zylinder dient über Druckluft dem Lüftungsbetrieb. Beschreiben Sie die Funktionsweise für Lüftungs- und Rauchabzugsbetrieb.",a:""},
+{i:"A23",s:"S5",t:"RAA",p:0,q:"Natürliche RAA mit 8 NRWG, je CO2-Flasche 24 g bei 150 bar, zentrale Flasche 150 g bei 150 bar, mind. 9 bar zum sicheren Auslösen und Verriegeln nötig, Kupferleitung 6 × 1 mm, 400 m Länge, Umgebungsdruck 1 bar. Berechnen Sie den Druck in der Leitung beim Anstechen der zentralen Flasche und bewerten Sie, ob er ausreicht.",a:""},
+
+/* ===== DBA / RDA 2025 ===== */
+{i:"D1",s:"S6",t:"RDA",p:0,q:"Welche Prüfhandlungen führen Sie an einer RDA-Anlage durch?",a:""},
+{i:"D2",s:"S6",t:"RDA",p:0,q:"Wann ist eine Spüllüftungsanlage prüfpflichtig?",a:""},
+{i:"D3",s:"S6",t:"RDA",p:0,q:"Welche Anforderungen an eine RDA-Anlage müssen gesondert beschrieben werden?",a:""},
+{i:"D4",s:"S6",t:"RDA",p:0,q:"Ist ein Fenster an der Fassade als Abström-Öffnung zulässig?",a:""},
+{i:"D5",s:"S6",t:"RDA",p:0,q:"Welche Arten von Mängeln gibt es, welche Bewertungskriterien gelten, welche Konsequenzen folgen?",a:""},
+{i:"D6",s:"S6",t:"RDA",p:0,q:"Welche wesentlichen Anforderungen aus der MHHRL werden an die sicherheitstechnische Gebäudeausrüstung in Bezug auf die RDA-Anlage gestellt?",a:""},
+{i:"D7",s:"S6",t:"RDA",p:0,q:"Welche Anforderungen für Sicherheitstreppenräume werden an Hochhäuser von mehr als 60 m gestellt?",a:""},
+{i:"D8",s:"S6",t:"RDA",p:0,q:"Welche Verwendbarkeitsnachweise werden an die Komponenten Abströmung und Druckentlastungsklappe gestellt?",a:""},
+{i:"D9",s:"S6",t:"RDA",p:0,q:"Welche ungünstigen Wetterbedingungen sind an RDA-Anlagen zu beachten?",a:""},
+{i:"D10",s:"S6",t:"RDA",p:0,q:"Welche bauphysikalischen Anforderungen werden an die (bauphysikalisch notwendige) Außenluftklappe gestellt?",a:""},
+{i:"D11",s:"S6",t:"RDA",p:0,q:"Welche Technischen Regeln gelten für a) die Energieversorgung von RDA, b) Entrauchungsklappen, c) Steuertafeln und Bedienfelder?",a:""},
+{i:"D12",s:"S6",t:"RDA",p:0,q:"Wo werden Anlagen zur Rauchfreihaltung im Allgemeinen gefordert?",a:""},
+{i:"D13",s:"S6",t:"RDA",p:0,q:"Wie und an welcher Stelle messen Sie die Türöffnungskraft?",a:""},
+{i:"D14",s:"S6",t:"RDA",p:0,q:"Sind RDA-Anlagen in einem Hochhaus prüfpflichtig, in dem nur Wohnungen vorhanden sind?",a:""},
+{i:"D15",s:"S6",t:"RDA",p:22,q:"Planprüfung Sicherheitstreppenraum (max. eine Seite, stichpunktartig) anhand von Baugenehmigung, BSK, Planungsbeschreibung DBA, Brandschutzplänen EG und Regelgeschoss, Grundrissplänen und Anlagenschema. Gegeben: Treppenraum mit angrenzenden notwendigen Fluren und Vorraum, K90, unidirektional; Klappen vom Treppenraum zum Vorraum als Rückschlagklappe ohne Anforderung; Abströmöffnung Priorit-Tür; Baugenehmigung: Strömungsweg beide Türen zum Brandgeschoss offen, Gebäudeeingangstür geschlossen, Strömungsgeschwindigkeit 0,75 m/s. Bewerten Sie a) Qualität der Unterlagen und Konsequenzen, b) Eignung der verwendeten Bauteile, c) Funktionsfähigkeit der Anlage, d) Abweichungen von baurechtlichen Vorgaben, e) Mängel in der Planung. Tragen Sie die relevanten Rauchauslöseeinrichtungen in die Grundrisspläne ein.",a:""},
+
+/* ===== BauOR schriftlich 2025 ===== */
+{i:"B1",s:"S7",t:"BAU",p:0,q:"Ihnen liegen zu einer wiederkehrenden Prüfung alle genehmigten Bauunterlagen vor. a) Sie stellen fest, dass ein Änderungsantrag zur Baugenehmigung vorliegt — wie gehen Sie damit um? b) Sie stellen es erst während der Prüfung fest — wie gehen Sie damit um?",a:""},
+{i:"B2",s:"S7",t:"BAU",p:0,q:"Wirksamkeit, Betriebssicherheit und bestimmungsgemäßes Zusammenwirken: a) Welche bauordnungsrechtlichen Unterlagen benötigen Sie zur Bewertung? b) Was fehlt Ihnen, wenn eines dieser Dokumente nicht vorgelegt werden kann?",a:"Aus dem Protokoll 2025: Baugenehmigung mit Stand, Brandschutzkonzept, Leistungserklärungen, Nachweise, Grundrisse, Schemata. Fehlt eines, kann die Anlage hinsichtlich Wirksamkeit, Betriebssicherheit und bestimmungsgemäßem Zusammenwirken nicht abschließend beurteilt werden."},
+{i:"B3",s:"S7",t:"BAU",p:0,q:"Sicherheitstechnisches Steuerungskonzept: a) Was beschreibt es? b) Was geht daraus bei der Ausführungsplanung hervor? c) Wofür wird es benötigt?",a:"a) Wird in sehr früher Planungsphase verlangt und beschreibt die grundsätzliche funktionale Steuerung, Interaktion und Überwachung sicherheitsrelevanter Anlagen und Quellen (Sensoren), insbesondere im Brandfall; stimmt Schutzziele und Wirkprinzipien des Brandschutznachweises ab.\nb) Räumliche Zuordnung in Auslösebereiche sowie Koordination und Aktivierung von BMA, RAA und Fluchtwegsteuerungen.\nc) Grundlage für die Brandfallsteuermatrix gemäß VDI 6010 Blatt 1."},
+{i:"B4",s:"S7",t:"BAU",p:0,q:"Geben Sie zwei harmonisierte technische Spezifikationen an.",a:"Protokollnotiz 2025: Es sind die wesentlichen Merkmale eines Bauprodukts und die Verfahren und Kriterien für die Bewertung der Leistung in Bezug auf die wesentlichen Merkmale festgelegt. (Antwort im Protokoll unscharf — prüfen!)"},
+{i:"B5",s:"S7",t:"BAU",p:0,q:"Für ein Bauprodukt liegt eine noch nicht abgelaufene abZ vor. Zusätzlich ist das Produkt nach BauPVO CE-gekennzeichnet. Dürfen Sie die abZ als Bewertungsgrundlage Ihrer Prüfung verwenden?",a:""},
+{i:"B6",s:"S7",t:"BAU",p:0,q:"Was kennzeichnet eine technische Baubestimmung bzw. wofür sind diese da?",a:"Technische Baubestimmungen konkretisieren die Anforderungen an bauliche Anlagen, z. B. durch Verweise auf Normen und andere technische Regeln. Sie enthalten technische Regeln für Planung, Bemessung und Ausführung von Bauwerken sowie für Bauprodukte."},
+{i:"B7",s:"S7",t:"BAU",p:0,q:"Was ist eine ETA (Europäische Technische Bewertung)? a) Was beinhaltet sie allgemein? b) Wofür wird sie verwendet?",a:"Die ETA ist ein Produktnachweis, der zur CE-Kennzeichnung führt. Sie ermöglicht, Bauprodukte europaweit zu vermarkten, wenn sie nicht oder nicht vollständig von einer harmonisierten Norm erfasst sind."},
+{i:"B8",s:"S7",t:"BAU",p:0,q:"Was ist eine Bauart? Was ist ein Bausatz?",a:""},
+{i:"B9",s:"S7",t:"BAU",p:0,q:"Gefordert ist eine feuerbeständige, rauchdichte und selbstschließende Tür. Auf dem Typenschild steht EI230 S200C. a) Geben Sie die nationale Bezeichnung an. b) Erfüllt die Tür die Forderungen?",a:""},
+{i:"B10",s:"S7",t:"BAU",p:0,q:"Sind Mittel- und Großgaragen Sonderbauten?",a:"Protokollnotiz 2025: Nein, nach §2 Abs. 4 MBO sind Garagen vom Sonderbau ausgenommen; Mittel- und Großgaragen (Nutzfläche über 100 m²) werden jedoch bezüglich einer Reihe von Anforderungen und Verfahren zusammen mit Sonderbauten genannt. (Formulierung prüfen — §2 Abs. 4 Nr. 10 MBO nennt Garagen ausdrücklich.)"},
+{i:"B11",s:"S7",t:"BAU",p:0,q:"Unterliegen sicherheitstechnische Anlagen in Mittelgaragen der Prüfpflicht? Begründen Sie anhand der entsprechenden Verordnung.",a:"Protokollnotiz 2025: Ja, der Brandschutznachweis muss durch einen Prüfsachverständigen für Brandschutz bescheinigt sein. (Begründung über MPrüfVO nachziehen.)"},
+{i:"B12",s:"S7",t:"BAU",p:0,q:"Welche besondere Gefährdung geht von einer Verkaufsstätte mit mehr als 2000 m² Grundfläche für die Nutzer aus? Nennen Sie zwei Beispiele.",a:""},
+{i:"B13",s:"S7",t:"BAU",p:0,q:"Verkaufsstätte mit 4 Verkaufsräumen à 1000 m² inklusive Ladenstraßen: Nennen Sie zwei sicherheitstechnische Anlagen, die Sie erwarten (nach M-VkVO).",a:""},
+{i:"B14",s:"S7",t:"BAU",p:0,q:"Nennen Sie zwei Sonderbauten, die nach §1 M-PrüfVO prüfpflichtig sind.",a:""},
+{i:"B15",s:"S7",t:"BAU",p:0,q:"Geben Sie für folgende Bauteile den bauordnungsrechtlichen Begriff, die nationale und die europäische Klassifizierung an: a) raumabschließende, aussteifende Wand mit 90 min Feuerwiderstand, b) nichttragende raumabschließende Wand eines notwendigen Flurs.",a:""},
+{i:"B16",s:"S7",t:"BAU",p:0,q:"Gebäudeaufgabe mit zwei komplexen Grundrissen: Gebäudeklasse mit Begründung; bauordnungsrechtliche, europäische und nationale Klassifizierung der Wände 1–6; Anforderungen an Wände notwendiger Flure; sind in beiden Büronutzungen im OG4 notwendige Flure zu bilden (Begründung); welche der Wände 1–6 sind Trennwände; bauordnungsrechtlicher Begriff für Wand 4+5; welche Nutzungseinheiten erfüllen Sonderbautatbestände (Begründung nach MBO).",a:"Hinweise aus dem Protokoll: Bettenzimmer war als Kongresshotel bezeichnet; statt „Gaststätte“ standen Begriffe da, aus denen der Tatbestand abzuleiten war; die Markierung der Wände 4 und 5 ging über die Hausecke hinaus."},
+
+/* ===== LTA + BauOR 2025 digital ===== */
+{i:"E1",s:"S8",t:"BAU",p:0,q:"Wann wird ein allgemeines bauaufsichtliches Prüfzeugnis ausgestellt?",a:""},
+{i:"E2",s:"S8",t:"BAU",p:0,q:"Welche Möglichkeiten gibt es, von den allgemeinen Anforderungen der Bauordnung abzuweichen?",a:""},
+{i:"E3",s:"S8",t:"BAU",p:0,q:"Nach welchem wesentlichen Merkmal werden a) Baustoffe, b) Bauteile klassifiziert?",a:""},
+{i:"E4",s:"S8",t:"BAU",p:0,q:"Nennen Sie je ein Schutzziel, das bei einem Funktionserhalt von a) 30 Minuten, b) 90 Minuten verfolgt wird, und jeweils eine sicherheitstechnische Anlage dazu.",a:""},
+{i:"E5",s:"S8",t:"LTA",p:0,q:"Küchenabluft: a) Warum gibt es für Brandschutzklappen in Küchenabluft keine CE-Kennzeichnung? b) Nennen Sie die Nachweise für die Verwendbarkeit einer Küchenabluftklappe.",a:""},
+{i:"E6",s:"S8",t:"LTA",p:0,q:"Stroke Unit / Neurologie für bis zu 14 Patienten und 10 Besucher, Schockraum 40 m². Nennen Sie: Mindestluftvolumenstrom je Patient, je Besucher, den nicht zu unterschreitenden Mindestaußenluftvolumenstrom für den Schockraum, den Mindestvolumenstrom für den Schockraum und den Mindestgesamtvolumenstrom der Station.",a:""},
+{i:"E7",s:"S8",t:"BAU",p:0,q:"Brandwände: a) Sind Brandwände raumabschließende Bauteile? b) Müssen innere Brandwände immer bis über das Dach reichen? c) Dürfen Brandwände nach HolzbauRL aus brennbaren Baustoffen bestehen?",a:""},
+{i:"E8",s:"S8",t:"BAU",p:0,q:"Nennen Sie drei wesentliche Merkmale von Nutzungseinheiten.",a:""},
+{i:"E9",s:"S8",t:"LTA",p:0,q:"Büroraum für maximal 10 Personen, Raumhöhe 3 m, Raumtiefe 6 m, Fenster auf einer Raumseite. Nennen Sie die mindestens benötigte Fläche für kontinuierliche natürliche Lüftung nach Arbeitsstättenrichtlinie.",a:""},
+{i:"E10",s:"S8",t:"LTA",p:0,q:"Prüfung einer Brandschutzklappe Trox FK2-EU in einer Holzwand mit GFK-Verkleidung (Neubau nach HolzbauRL): 10.1 Welche Unterlagen benötigen Sie? 10.2 Aus welchen Dokumenten ist rechtskräftig zu entnehmen, ob die BSK so eingebaut werden darf? 10.3 Was ist zu prüfen? 10.4 Die Revisionsöffnungen sind durch Holzleisten versperrt — was können Sie tun, um diesen Mangel zu klären? 10.5 Nennen Sie die wesentlichen Bestandteile der BSK. 10.6 Welche Anforderungen bestehen an das Brandverhalten a) der wesentlichen, b) der sonstigen Bestandteile?",a:""},
+{i:"E11",s:"S8",t:"BAU",p:0,q:"Bei einer Prüfung wird Ihnen der Brandschutznachweis nicht vorgelegt. a) Kann trotzdem geprüft werden? b) Können Betriebssicherheit und Wirksamkeit bescheinigt werden? c) Kann das bestimmungsgemäße Zusammenwirken bescheinigt werden?",a:""},
+{i:"E12",s:"S8",t:"LTA",p:0,q:"Volumenstrommessung mit Prandtlrohr, Rechteckkanal 600 × 800 mm ± 15 mm, 25 Messpunkte (5×5), Dichte 1,2 kg/m³ ± 1 %, Temperatur 14 °C, Abstand zur Störstelle 2,5 m stromaufwärts, Messgerätefehler 1 % bei 25 °C (0,036 % je °C Abweichung), Fehler Prandtlrohr 0,1 Pa. Bestimmen Sie: benötigte Messpunktzahl, Unregelmäßigkeit des Geschwindigkeitsprofils, gemessenen Volumenstrom, ΔU, ΔG, ΔGesamt. Kann der vertraglich vereinbarte Volumenstrom von 7500 m³/h ± 300 m³/h bei 20 °C bestätigt werden?",a:"Messwerte (Pa) über Einstecktiefen 80/240/400/560/720 mm: 60 → 5,1 5,5 5,5 5,8 5,6 | 120 → 5,6 6,1 5,6 5,9 4,9 | 300 → 6,4 4,9 5,8 5,8 4,8 | 420 → 4,3 5,1 5,7 5,7 5,7 | 540 → 5,5 5,6 6,2 5,4 5,5"},
+{i:"E13",s:"S8",t:"LTA",p:0,q:"Bei der Prüfung einer Brandschutzklappe stellen Sie fest, dass die Kennzeichnung fehlt. Wie kann dieser Mangel behoben werden?",a:""},
+{i:"E14",s:"S8",t:"BAU",p:0,q:"Schematische Darstellung eines Gebäudes: 14.1 Welche Merkmale sind für die Einordnung in eine Gebäudeklasse entscheidend? 14.2 Welche Gebäudeklasse liegt vor? 14.3 Welche Sonderbau-Tatbestände liegen vor (Falschangaben führen zu Punktabzug)? 14.4 Anforderungen an tragende und aussteifende Bauteile? 14.5 Anforderungen an Wände notwendiger Flure?",a:""},
+{i:"E15",s:"S8",t:"BAU",p:0,q:"Decken: a) Wann sind Öffnungen in Decken zulässig? b) Sind Decken raumabschließende Bauteile? c) Müssen Decken in Gebäudeklasse 5 feuerbeständig sein?",a:""},
+{i:"E16",s:"S8",t:"BAU",p:0,q:"Welche Aussagen über ausgeschilderte Rettungswege treffen zu? a) Sie sind notwendige Flure b) Anforderungen nach MLAR müssen eingehalten werden c) Ihre Wände müssen mindestens feuerhemmend sein d) keine der Aussagen trifft zu",a:""},
+{i:"E17",s:"S8",t:"LTA",p:0,q:"Garage unter einem Wohnhaus, ca. 30 × 16 m, 10 Stellplätze und Fahrradbereich. Drei Lüftungsöffnungen: zwei mit 0,8 × 0,4 m, eine mit 0,4 × 0,4 m; die beiden äußeren münden in Kunststofflichtschächte 0,5 × 0,5 m, Höhe je 1,55 m; über einer Tür zusätzlich 1,1 × 0,4 m; Versperrung 20 %. 17.1 Klassifizieren Sie die Garage nach M-GarVO. 17.2 Notwendiger freier Querschnitt für natürliche Lüftung? 17.3 Vorhandener Querschnitt? 17.4 Reicht er aus? 17.5 Ist natürliche Lüftung prinzipiell möglich, wenn der Querschnitt nicht ausreicht? 17.6 Geringster baulicher Aufwand? 17.7 Bei maschineller Abluft mit den Schächten als Zuluftquelle: wie sind die Absaugstellen zu verteilen? 17.8 Zulässige Ansteuerungsmöglichkeiten? 17.9 Erforderlicher Volumenstrom?",a:""},
+
+/* ===== Baurecht 2025 (mit Antwortnotizen) ===== */
+{i:"F1",s:"S9",t:"BAU",p:0,q:"Es liegen alle Genehmigungsunterlagen vor. Im Nachgang wurde eine Abweichung beantragt, die die zu prüfende Anlage betrifft. Wie gehen Sie damit um?",a:""},
+{i:"F2",s:"S9",t:"BAU",p:0,q:"Nennen Sie zwei Anwendungsbereiche, die nach M-PrüfVO prüfpflichtig sind.",a:""},
+{i:"F3",s:"S9",t:"BAU",p:0,q:"Gebäudeaufgabe: Gebäudeklasse nennen und begründen; Anforderungen an tragende und aussteifende Bauteile sowie an nichttragende Wände zu notwendigen Fluren, jeweils mit nationalem, europäischem und bauordnungsrechtlichem Begriff; sind notwendige Flure in den Büro-NE im 2. OG erforderlich (eine NE unter 400 m², eine über 400 m²); welche Wände sind Trennwände und welche Anforderungen gelten; welche zusätzlichen Anforderungen bei den Wänden 4 und 5; Sonderbautatbestände mit Begründung.",a:""},
+
+/* ===== Bauordnungsrecht 2024 ===== */
+{i:"G1",s:"S10",t:"BAU",p:0,q:"Nach M-PrüfVO sind Sie privatrechtlich unterwegs. Warum ist die Prüfung bauordnungsrechtlich relevant? Nennen Sie die dazugehörigen Paragrafen und Vorschriften.",a:""},
+{i:"G2",s:"S10",t:"BAU",p:0,q:"Wofür ist eine innere Brandwand da?",a:""},
+{i:"G3",s:"S10",t:"BAU",p:0,q:"Was ist eine Nutzungseinheit? Nennen Sie die brandschutztechnischen Anforderungen und ein Schutzziel des §14 MBO.",a:""},
+{i:"G4",s:"S10",t:"BAU",p:0,q:"Nennen Sie Funktion und Definition einer Decke im Brandfall.",a:""},
+{i:"G5",s:"S10",t:"BAU",p:0,q:"Nennen Sie zwei Grundanforderungen an Bauwerke gemäß Anhang 2 der Verordnung (EU) 305/2011.",a:""},
+{i:"G6",s:"S10",t:"BAU",p:0,q:"Worin werden Baustoffe und Bauteile gemäß MBO unterschieden? Nennen Sie die Oberbegriffe.",a:""},
+{i:"G7",s:"S10",t:"BAU",p:0,q:"Welchen Funktionserhalt benötigen technische Anlagen zur Erfüllung des Schutzziels der MBO: a) 30 min, b) 90 min?",a:""},
+{i:"G8",s:"S10",t:"BAU",p:0,q:"Für ein Bauprodukt liegen eine ETA und eine aBG vor. Warum benötigen Sie für die Bewertung beide Dokumente? Begründen Sie.",a:""},
+{i:"G9",s:"S10",t:"BAU",p:0,q:"Nennen Sie die allgemeinen Anforderungen an Bauprodukte.",a:""},
+{i:"G10",s:"S10",t:"BAU",p:0,q:"Auf der Baustelle werden Ihnen Baugenehmigung und Brandschutznachweis vorgelegt, der Prüfbericht Brandschutz fehlt. a) Wie gehen Sie damit um? b) Können Sie Ihre Prüfung durchführen?",a:""},
+{i:"G11",s:"S10",t:"BAU",p:0,q:"Wann muss ein Hersteller eine Leistungserklärung abgeben bzw. erstellen?",a:""},
+{i:"G12",s:"S10",t:"BAU",p:0,q:"Wann ist ein abP erforderlich bzw. möglich?",a:""},
+{i:"G13",s:"S10",t:"BAU",p:0,q:"Im Brandschutzkonzept ist ein offensichtlicher Fehler vorhanden. a) Bewerten Sie den Fehler? b) Was machen Sie im Rahmen Ihrer Prüfung?",a:""},
+{i:"G14",s:"S10",t:"BAU",p:0,q:"Was ist eine Abweichung nach §67 MBO und nach §51 MBO? Wer muss diese bestätigen?",a:""},
+{i:"G15",s:"S10",t:"BAU",p:0,q:"Gebäudeskizze (Mieterkeller/Tiefgarage 1200 m²; NE1 Pflegeeinrichtung mit 5 Intensivpflegeplätzen; NE2/3 Wohnungen je 270 m²; NE4-6 Büro je 180 m²; Gaststätte für 35 Personen; Penthouse; Kino 4×150 Personen mit gemeinsamem Rettungsweg und 2×105 Personen mit separaten Ein-/Ausgängen; Büro- und Verwaltungsnutzung 1200 m² in 12 Büros à 100 m²; Büro 3×500 m² + 100 m²; OKF 0,0 / 6,8 / 8,4 m): Gebäudeklasse bestimmen und begründen; Qualität der tragenden, aussteifenden, raumabschließenden Bauteile nach MBO inkl. europäischer Klassifizierung; Qualität der Wand zum notwendigen Flur (ohne Keller); welche NE erfüllen den Sonderbautatbestand und warum?",a:""},
+
+/* ===== Baurecht Januar 2024 (Foto) ===== */
+{i:"H1",s:"S11",t:"BAU",p:0,q:"Die Prüfungen gemäß M-PrüfVO erfolgen ausschließlich privatrechtlich. Warum ist Ihre Prüftätigkeit dennoch bauordnungsrechtlich notwendig? Begründen Sie anhand der entsprechenden Vorschriften und Paragrafen.",a:""},
+{i:"H2",s:"S11",t:"BAU",p:0,q:"Während einer Prüfung bemerken Sie einen offensichtlichen Fehler im Brandschutznachweis, der Einfluss auf Betriebssicherheit und Wirksamkeit hat. Ist die Korrektur solcher Fehler Bestandteil Ihrer Prüfungen? Was können Sie in diesem Fall tun?",a:""},
+{i:"H3",s:"S11",t:"BAU",p:0,q:"Wie gehen Sie damit um, wenn Ihnen der Prüfbericht Brandschutz (Teil der Baugenehmigung) fehlt?",a:""},
+{i:"H4",s:"S11",t:"BAU",p:0,q:"Unter welchen Voraussetzungen kann der Prüfingenieur Brandschutz Abweichungen nach a) §67 und b) §51 MBO zulassen?",a:""},
+{i:"H5",s:"S11",t:"BAU",p:0,q:"Nennen Sie die Grundbegriffe für Bauteile und Baustoffe hinsichtlich Brandschutz.",a:""},
+{i:"H6",s:"S11",t:"BAU",p:0,q:"Nennen Sie jeweils ein Schutzziel und ein Beispiel einer technischen Anlage für a) 30 min und b) 90 min Funktionserhalt.",a:""},
+{i:"H7",s:"S11",t:"BAU",p:0,q:"Definieren Sie den Begriff Nutzungseinheiten und ordnen Sie das Schutzziel zu.",a:""},
+{i:"H8",s:"S11",t:"BAU",p:0,q:"Nennen Sie zwei Grundanforderungen an Bauwerke gemäß EU-VO 305/2011.",a:""},
+{i:"H9",s:"S11",t:"BAU",p:0,q:"Beschreiben Sie die Grundanforderung an Brandwände in Gebäuden.",a:""},
+{i:"H10",s:"S11",t:"BAU",p:0,q:"Beschreiben Sie die Grundanforderung an Decken.",a:""},
+{i:"H11",s:"S11",t:"BAU",p:0,q:"Sie haben ein Bauprodukt mit einer ETA und einer aBG vorliegen. Ordnen Sie diesen Sachverhalt bauordnungsrechtlich ein.",a:""},
+{i:"H12",s:"S11",t:"BAU",p:0,q:"Wann ist ein abP möglich? Wann darf ein Bauprodukt verwendet werden? Wann ist eine Leistungserklärung notwendig?",a:""},
+{i:"H13",s:"S11",t:"BAU",p:0,q:"Gebäudeaufgabe (NE1 Intensivpflege 5 Personen; NE2-3 Arztpraxis 170 m²; NE4-6 Büro 270 m²; NE7 Büroflächen 3×500 m² + 1×100 m²; NE8 Großraumbüro/Verwaltung 1200 m²; NE9 Kino 4 Säle à 150 Personen mit gemeinsamem Rettungsweg + 2 Säle à 105 Personen mit getrennten Rettungswegen; Gaststätte 35 Personen; Penthouse; Tiefgarage 1200 m²; zwei Treppenhäuser): a) Gebäudeklasse? b) Begründung. c) Feuerwiderstandsdauer der tragenden Wände und Stützen sowie der Wände notwendiger Flure (ohne Keller). d) Europäische Klassifizierungen. e) Sonderbautatbestände. f) Begründung anhand der Schwellenwerte.",a:""},
+
+/* ===== LTA schriftlich 2024 ===== */
+{i:"I1",s:"S12",t:"LTA",p:2,q:"Welche Aufgaben haben maschinelle Lüftungsanlagen gemäß MVV TB?",a:""},
+{i:"I2",s:"S12",t:"LTA",p:1.5,q:"Welche Arten von maschinellen Lüftungsanlagen gibt es gemäß MVV TB?",a:""},
+{i:"I3",s:"S12",t:"LTA",p:1.5,q:"Krankenhaus-Obergeschoss, zwei Gebäudeteile mit notwendigem Flur, notwendigen Treppenräumen und Schächten, ein Rauchabschnitt kleiner/gleich 400 m². Wand zwischen Flurabschnitt I und II: Bauart Brandwand; Wand zwischen Lüftungsschacht und Flurabschnitt II: feuerbeständig. Zeichnen Sie alle nötigen Absperrvorrichtungen in den Grundriss ein und benennen Sie diese mit ihren Grundanforderungen.",a:"Protokollhinweis: Bei den Wandabschnitten an den Zimmern 1 und 2 ist es definitiv Bauart Brandwand; beim Wandabschnitt im Flur war strittig, ob Brandwand oder feuerhemmend."},
+{i:"I4",s:"S12",t:"LTA",p:1,q:"Klassifizieren Sie die eingezeichneten Absperrvorrichtungen nach europäischem System.",a:""},
+{i:"I5",s:"S12",t:"LTA",p:8,q:"Für die Außenluftmündung einer Lüftungsanlage können die Abstandsanforderungen bezüglich brennbarer Baustoffe nach MLüAR Kapitel 5.1.2 nicht eingehalten werden; die Mündung befindet sich an der Fassade. 4.1 Welche Vorkehrungen können getroffen werden? 4.2 Wo müssen diese angebracht werden? 4.3 Welche Nachweise sind zu erbringen?",a:"Protokollhinweis: In der Aufgabenstellung stand 5.1.3, das war ein Fehler."},
+{i:"I6",s:"S12",t:"LTA",p:0,q:"Bestimmen Sie den mindesterforderlichen Außenvolumenstrom (nicht aus versicherungs- oder arbeitsschutztechnischer Sicht) für folgende Räume in einem Krankenhaus: intensivmedizinische Behandlungen, 10 Personen Personal, 20 Patienten davon 5 mit Narkosegasbehandlung.",a:""},
+{i:"I7",s:"S12",t:"LTA",p:8,q:"Messtechnik: Tabelle mit 10 Zeilen und Messwerten bei 0° und 90°, Ergebnisse als Drücke zwischen ca. 12 und 18 Pa; Dichte 1,311 kg/m³; Prandtl-Rohr mit 1 Pa Auflösung; Durchmesser Lüftungsleitung 600 mm ± 5 mm; 1 % Messgeräteunsicherheit. 6.1 Welche Gesamtmessunsicherheit ist zulässig? 6.2 Ist der aus der Krankenhausaufgabe errechnete Außenluftvolumenstrom unter Berücksichtigung des Normzustandes nachgewiesen?",a:""},
+{i:"I8",s:"S12",t:"LTA",p:16,q:"Bei einer Prüfung finden Sie einen Abschluss besonderer Art und Verwendung (Überströmklappe). 7.1 Welche speziellen Unterlagen brauchen Sie und welche Prüfungen führen Sie durch? 7.2 Was tun Sie bei der äußeren Sichtprüfung? 7.3 Was tun Sie bei der inneren Sichtprüfung? 7.4 Was tun Sie bei der Funktionsprüfung?",a:""},
+{i:"I9",s:"S12",t:"LTA",p:0,q:"Garage in Hanglage, Fläche 530 m², OKFFB −2,9 m, 20 Stellplätze, geschlossenes Sektionaltor, Lüftungsöffnungen 76 × 76 cm mit je 40 % Versperrung, Lüftungsschacht 80 × 40 × 150 cm ohne Angabe zur Versperrung, geplant ist natürliche Lüftung. 8.1 Welche bauordnungsrechtlichen Vorschriften und aaRdT gelten hier? 8.2 Ordnen Sie die Garage bauordnungsrechtlich mit Begründung ein. 8.3 Beschreiben Sie die Anforderungen an diese Art der Lüftung. 8.4 Bewerten Sie die Lüftungsöffnungen nach ihrer Dimension. 8.5 Bewerten Sie die Lüftungsöffnungen nach ihrer Anordnung. 8.6 Welche baulichen und technischen Maßnahmen ermöglichen eine natürliche Lüftung? 8.7 Beschreiben Sie die Anforderungen an eine maschinelle Abluft. 8.8 Nennen Sie mindestens zwei Steuerungsmöglichkeiten einer maschinellen Abluft.",a:"Protokollhinweis: Breite über 20 m, Abstand 1 bis 3 jeweils ca. 3 m, zwischen O3 und S1 über 20 m (ca. 28 m). Erlaubte Unterlagen in dieser Prüfung: MBO, VV TB, LüAR, GarVO, DIN 1946-4, DIN EN 12599, DIN 16798-1, VDI 2053."},
+
+/* ===== Baurecht 2023 (mit Antworten) ===== */
+{i:"J1",s:"S13",t:"BAU",p:0,q:"Was ist gemäß M-PPVO:2012-12 die Prüfaufgabe der Prüfsachverständigen für die Prüfung technischer Anlagen?",a:"§31 M-PPVO Aufgabenerledigung: Die PSV bescheinigen die Übereinstimmung der technischen Anlagen mit den öffentlich-rechtlichen Anforderungen im Sinne der §§1 und 2 MPrüfVO. Werden festgestellte Mängel nicht in der festgelegten Frist beseitigt, haben sie die Bauaufsichtsbehörde zu unterrichten."},
+{i:"J2",s:"S13",t:"BAU",p:0,q:"Wofür ist der Prüfsachverständige bei der Durchführung einer Prüfung nach den Muster-Prüfgrundsätzen allein verantwortlich?",a:"Dafür, dass die an der einzelnen Anlage durchgeführten Prüfungen nach Art und Umfang notwendig und hinreichend sind."},
+{i:"J3",s:"S13",t:"BAU",p:0,q:"Welche Art der Prüfung ist durchzuführen, wenn seit der letzten Prüfung an der Anlage oder in deren Umfeld wesentliche Änderungen vorgenommen wurden?",a:"Muster-Prüfgrundsätze Ziffer 1: Sofern keine genehmigungsbedürftige Abweichung vom genehmigten Brandschutzkonzept vorliegt, ist die wiederkehrende Prüfung als Erstprüfung durchzuführen."},
+{i:"J4",s:"S13",t:"BAU",p:0,q:"a) Sind Anlagen in Industriebauten nach §1 M-PrüfVO prüfpflichtig? b) Erläutern Sie die mögliche Rechtsgrundlage für eine Prüfung in Industriebauten.",a:"a) Nein. b) Die Prüfung kann in der Baugenehmigung gefordert sein (mit Prüfbericht Brandschutz als Bestandteil); besondere Anforderungen nach §51 MBO in Sonderbauten."},
+{i:"J5",s:"S13",t:"BAU",p:0,q:"Worin besteht der Unterschied zwischen einem Verwendbarkeitsnachweis und einem Anwendbarkeitsnachweis?",a:"Verwendbarkeitsnachweis wird für Bauprodukte erteilt, Anwendbarkeitsnachweis für Bauarten."},
+{i:"J6",s:"S13",t:"BAU",p:0,q:"Erstprüfung in einem Schulgebäude nach M-SchulbauR; nach dem Brandschutznachweis soll von einer einzelnen Anforderung abgewichen werden. a) Welcher Verwaltungsakt ist im Genehmigungsverfahren erforderlich? b) In welchem Regelwerk schlagen Sie den Verfahrensweg nach?",a:"a) Antrag auf Abweichung nach §67 Abs. 1 MBO, da von technischen Baubestimmungen gemäß §85a MBO abgewichen wird. b) MBO bzw. MVV TB Abschnitt A 2 Brandschutz (A 2.2.2.5)."},
+{i:"J7",s:"S13",t:"BAU",p:0,q:"In der Baugenehmigung steht als Auflage, dass der geprüfte Brandschutznachweis i. V. m. dem Prüfbericht Brandschutz Bestandteil der Baugenehmigung ist. Beide liegen Ihnen nicht vor. Wie verhalten Sie sich hinsichtlich Prüfungsdurchführung und Ergebnis im Prüfbericht?",a:"Die Prüfung kann durchgeführt werden, jedoch können Wirksamkeit, Betriebssicherheit und Zusammenwirken nicht abschließend bescheinigt werden, weil die bauordnungsrechtlichen Anforderungen mangels Brandschutznachweis und Prüfbericht nicht bekannt sind."},
+{i:"J8",s:"S13",t:"BAU",p:0,q:"Welche Rechtsgrundlagen gelten in Deutschland zur Regelung von Bauprodukten und Bauarten?",a:"Die jeweilige Landesbauordnung und die MVV TB."},
+{i:"J9",s:"S13",t:"BAU",p:0,q:"a) Welchen Nachweis benötigt ein Bauprodukt ohne CE-Kennzeichnung? b) Welche Kennzeichnung ist anzubringen? c) Wer ist verantwortlich?",a:"a) Übereinstimmungsbestätigung (§21 MBO) mit einer technischen Regel der Technischen Baubestimmungen, der abZ, dem abP oder der Zustimmung im Einzelfall. b) Ü-Zeichen. c) Der Hersteller."},
+{i:"J10",s:"S13",t:"BAU",p:0,q:"Sie stellen an einem verwendeten Bauprodukt eine geringfügige Abweichung gegenüber dem Verwendbarkeitsnachweis fest. a) Wer kann bestätigen, dass die Abweichung nicht wesentlich ist? b) In welchem Dokument erfolgt die Feststellung? c) Kann eine gutachterliche Stellungnahme die Abweichung formell legalisieren? d) Über welchen Nachweis kann eine wesentliche Änderung legalisiert werden?",a:"a) Der Inhaber des Verwendbarkeitsnachweises (Hersteller). b) In der Übereinstimmungsbestätigung. c) Nein, gutachterliche Stellungnahmen sind laut DIBt keine Verwendbarkeitsnachweise. d) Zustimmung im Einzelfall (ZiE)."},
+{i:"J11",s:"S13",t:"BAU",p:0,q:"Nennen Sie stichpunktartig mindestens zwei Regelungsinhalte von abZ und aBG.",a:"abZ: Produkteigenschaften und Zusammensetzung, Kennzeichnung, werkseigene Produktionskontrolle, ggf. Fremdüberwachung, Übereinstimmungsbestätigung des Herstellers.\naBG: Planung, Bemessung, Ausführung; zu verwendende Bauprodukte mit Verweis auf Norm, abZ, abP, ETA; Bauteile, in denen die Bauart errichtet werden darf; Bestimmungen für den Einbau; Kennzeichnung der Bauart; Übereinstimmungserklärung des Errichters; Bestimmungen für Nutzung und Nachbelegung."},
+{i:"J12",s:"S13",t:"BAU",p:0,q:"Wofür werden gemäß MBO allgemeine und vorhabenbezogene Bauartgenehmigungen erteilt? Wer ist für die Erteilung verantwortlich?",a:"Für Bauarten, die von technischen Baubestimmungen nach §85a MBO wesentlich abweichen und für die es keine aaRdT gibt. Verantwortlich: aBG das DIBt, vBG die oberste Bauaufsicht."},
+{i:"J13",s:"S13",t:"BAU",p:0,q:"a) Welche Kennzeichnung muss ein Bauprodukt aufweisen, das nach einer hEN in Verkehr gebracht wird? b) Welche Dokumente sind dem PSV vorzulegen?",a:"a) CE-Kennzeichnung. b) Leistungserklärung (DoP), Gebrauchsanleitung inkl. Betriebs- und Montageanleitung."},
+{i:"J14",s:"S13",t:"BAU",p:0,q:"Sie überprüfen den Einbau einer Abschottung in einer nichttragenden Trennwand aus GKF-Platten mit Anforderungen an die Feuerwiderstandsfähigkeit. In welchem Nachweis finden Sie die Angaben, ob die Abschottung für die Trennwand geeignet ist?",a:"In der allgemeinen Bauartgenehmigung (aBG) der Abschottung."},
+{i:"J15",s:"S13",t:"BAU",p:0,q:"Nennen Sie das Brandverhalten nach MBO für die allgemeinen nationalen Klassen und die höchste Brandklasse in der internationalen und national harmonisierten Klasse.",a:"leicht entflammbar, normal entflammbar, schwer entflammbar, nicht brennbar; national A2; international A2-s1, d0."},
+{i:"J16",s:"S13",t:"BAU",p:0,q:"Erläutern Sie den Begriff der Nutzungseinheit im brandschutztechnischen Sinne. Welches charakteristische Merkmal trennt diese?",a:"Brandschutztechnisch abgegrenzte Einheiten, die gegeneinander geschützt sind und den Feuerwehreinsatz durch räumlich definierte Abschnitte begünstigen. Begrenzung in der Regel durch raumabschließende Bauteile wie Trennwände und Geschossdecken (MBO:2016-05)."},
+{i:"J17",s:"S13",t:"BAU",p:0,q:"a) Durch welche Bauteile (Begriffe gemäß MBO) müssen verschiedene Nutzungseinheiten in mehrgeschossigen Gebäuden insgesamt und innerhalb eines Geschosses getrennt werden (nur ein Brandabschnitt)? b) Wovon hängt die Feuerwiderstandsfähigkeit ab?",a:"MBO:2016-05 §29 Abs. 1-3, §31. a) Trennwände und Decken. b) Von der Gebäudeklasse."},
+{i:"J18",s:"S13",t:"BAU",p:0,q:"Bestandsgebäude nach MBO 1997, eingestuft als „Gebäude geringer Höhe“. a) Erläutern Sie den Begriff. b) Welchen Gebäudeklassen nach MBO 2002 entspricht das?",a:"a) Oberkante Fußboden oberirdischer Geschosse, in denen Aufenthaltsräume möglich sind, bis 7 m über Geländeoberfläche. b) GK 1-3."},
+{i:"J19",s:"S13",t:"BAU",p:0,q:"Welche Kriterien sind für die Einstufung eines Gebäudes in eine Gebäudeklasse nach aktueller MBO maßgeblich?",a:"Höhe der Fußbodenoberkante des höchsten Geschosses mit möglichen Aufenthaltsräumen über der mittleren Geländeoberfläche, Anzahl und Größe der Nutzungseinheiten, freistehend oder nicht, land- und forstwirtschaftlich genutzte Gebäude, unterirdische Gebäude."},
+{i:"J20",s:"S13",t:"BAU",p:0,q:"Gebäudeaufgabe 2023: a) Gebäudeklasse? b) Begründung. c) Bauordnungsrechtliche Bezeichnungen für die Punkte 1 und 2. d) Feuerwiderstandsfähigkeit der Schotts an den Stellen 3, 4, 5 und 6 samt europäischer Bezeichnung. e) Bei welchen Nutzungseinheiten besteht Sonderbautatbestand und warum? f) Was bedeutet das Zeichen am Nachbargebäude?",a:""},
+
+/* ===== Baurecht 2022 ===== */
+{i:"K1",s:"S15",t:"BAU",p:0,q:"a) Wer von den am Bau Beteiligten ist für die Beauftragung der Prüfung verantwortlich? b) Welche Pflichten hat die Person gegenüber der Bauaufsicht?",a:""},
+{i:"K2",s:"S15",t:"BAU",p:0,q:"a) Wie ist der Prüfungsumfang zu wählen? b) Wann sind Stichproben zulässig?",a:""},
+{i:"K3",s:"S15",t:"BAU",p:0,q:"a) Benennen Sie die allgemeinen (europäischen und nationalen) Nachweise für Bauprodukte und Bauarten. b) Nennen Sie Beispiele je Nachweis.",a:""},
+{i:"K4",s:"S15",t:"BAU",p:0,q:"Beschreiben bzw. definieren Sie den Begriff Messwert.",a:""},
+{i:"K5",s:"S15",t:"BAU",p:0,q:"Wie setzt sich das endgültige Messergebnis zusammen?",a:""},
+{i:"K6",s:"S15",t:"BAU",p:0,q:"Definieren Sie Bauprodukt und Bauart.",a:""},
+{i:"K7",s:"S15",t:"BAU",p:0,q:"a) Welche Unterlage muss für ein Bauprodukt nach einer hEN vorgelegt werden? b) Nennen Sie zwei Angaben, die darin genannt werden müssen. c) Welche Kennzeichnung darf dann angebracht werden?",a:""},
+{i:"K8",s:"S15",t:"BAU",p:0,q:"a) Was sind die allgemeinen Aufgaben von raumabschließenden Bauteilen? b) Nennen Sie drei Beispiele aus der MBO.",a:""},
+{i:"K9",s:"S15",t:"BAU",p:0,q:"Abweichung in einem Brandschutzkonzept eines Industriebaus: a) Wer muss diese Abweichung beschreiben? b) In welchen Vorschriften ist der Verwaltungsakt beschrieben?",a:""},
+{i:"K10",s:"S15",t:"BAU",p:0,q:"Benennen Sie die bauaufsichtlichen Bezeichnungen E-d2, B2, A2, A2-s1 d0. Welches Merkmal eines Bauteils wird dadurch beschrieben?",a:""},
+{i:"K11",s:"S15",t:"BAU",p:0,q:"Wiederkehrende Prüfung, Bau von 1990, es wird nur die Baugenehmigung vorgelegt. a) Welche Unterlagen erwarten Sie? b) Ist die Baugenehmigung allein ausreichend? c) Nach welchen Anforderungen prüfen Sie?",a:""},
+{i:"K12",s:"S15",t:"BAU",p:0,q:"a) Nennen Sie die allgemeinen Anforderungen nach §3 MBO. b) Nennen Sie zwei Grundanforderungen.",a:""},
+{i:"K13",s:"S15",t:"BAU",p:0,q:"Nennen Sie ein Schutzziel nach §14 MBO und eine prüfpflichtige Anlage zur Erfüllung dieses Schutzziels.",a:""},
+{i:"K14",s:"S15",t:"BAU",p:0,q:"Definieren Sie den Begriff Brandabschnitt.",a:""},
+{i:"K15",s:"S15",t:"BAU",p:0,q:"Wann ist ein abP erforderlich bzw. möglich?",a:""},
+{i:"K16",s:"S15",t:"BAU",p:0,q:"Nennen Sie die Anforderungen an eine Nutzungseinheit bezüglich Brandschutz.",a:""},
+{i:"K17",s:"S15",t:"BAU",p:0,q:"Muss ein Betreiber seine Bestandsanlage anpassen a) bei Erscheinen neuer Normen oder bauordnungsrechtlicher Verordnungen/Richtlinien, b) bei wesentlichen Änderungen? Begründen Sie.",a:""},
+{i:"K18",s:"S15",t:"BAU",p:0,q:"Gebäudeaufgabe 2022: Gebäudeklasse und Begründung; Feuerwiderstandsfähigkeit der Schottungen an den Stellen 1-8 mit Benennung des durchbrochenen Bauteils; bei welcher NE besteht Sonderbautatbestand (Grenzwerte nach MBO); was darf anstelle einer Brandwand an Stelle 8 ausgeführt werden; wesentliche Bestandteile des Rettungsweges.",a:""},
+
+/* ===== Baurecht 2021 ===== */
+{i:"M1",s:"S16",t:"BAU",p:0,q:"a) Beschreiben Sie die Begriffe Betriebssicherheit und Wirksamkeit. b) In welcher Bauvorlage wird das Zusammenspiel der technischen Anlagen beschrieben (Wirk-Prinzip-Prüfung)?",a:""},
+{i:"M2",s:"S16",t:"BAU",p:0,q:"Sie kommen zu einer Prüfung; im letzten brandschutztechnischen Prüfbericht sind Baugenehmigung und genehmigtes BSK aufgeführt, werden Ihnen aber nicht vorgelegt. Wie gehen Sie vor und wie bewerten Sie das im Prüfbericht?",a:""},
+{i:"M3",s:"S16",t:"BAU",p:0,q:"a) Was bedeutet B2-s1-d0? b) Was bedeutet E? c) Welche Eigenschaft des Baustoffs wird beschrieben? d) Darf bei feuerbeständigen Bauteilen ein Baustoff der Klasse E eingesetzt werden?",a:""},
+{i:"M4",s:"S16",t:"BAU",p:0,q:"Wie ist die allgemeine Anforderung an bauliche Rettungswege?",a:""},
+{i:"M5",s:"S16",t:"BAU",p:0,q:"Was sind die Pflichten des Betreibers nach M-PrüfVO?",a:""},
+{i:"M6",s:"S16",t:"BAU",p:0,q:"a) Definieren Sie Sicherheitstreppenraum. b) Beschreiben Sie eine bauliche und eine technische Lösung.",a:""},
+{i:"M7",s:"S16",t:"BAU",p:0,q:"a) Was ist in Ihren Worten ein wesentlicher und ein einfacher Mangel (bauordnungsrechtlich nicht geregelte Begriffe)? b) Wie sind jeweils die Fristen zu setzen? c) Nennen Sie je ein Beispiel aus Ihrem Fachbereich.",a:""},
+
+/* ===== Allgemeiner Teil 2021 / 2020 ===== */
+{i:"N1",s:"S17",t:"BAU",p:0,q:"Wann sind allgemeine bauaufsichtliche Prüfzeugnisse möglich und erforderlich?",a:""},
+{i:"N2",s:"S17",t:"BAU",p:0,q:"Geben Sie die Aufgaben des Bauherrn nach M-PrüfVO an.",a:""},
+{i:"N3",s:"S17",t:"BAU",p:0,q:"Wann sind Stichproben zulässig und wer legt den Umfang fest?",a:""},
+{i:"N4",s:"S17",t:"BAU",p:0,q:"Welcher Nachweis ist nach Bauproduktenverordnung notwendig? Nennen Sie mindestens zwei Begriffe in der Leistungserklärung.",a:""},
+{i:"N5",s:"S17",t:"BAU",p:0,q:"Wie müssen Nutzungseinheiten untereinander brandschutztechnisch abgetrennt sein und wie werden NE innerhalb eines Brandabschnitts nach MBO gebildet?",a:""},
+{i:"N6",s:"S17",t:"BAU",p:0,q:"Wann ist kein Rettungsweg (notwendiger Flur) in einer Büro-/Verwaltungsnutzung notwendig?",a:""},
+{i:"N7",s:"S19",t:"BAU",p:0,q:"Welcher Tatbestand ist erfüllt, wenn die Prüfung erst nach 5 Jahren nach der Erstprüfung erfolgt?",a:""},
+{i:"N8",s:"S19",t:"BAU",p:0,q:"Nennen Sie die wesentlichen Arten von abweichenden Tatbeständen der MBO mit Paragrafen. Welcher Tatbestand benötigt eine Genehmigung bei der Bauaufsichtsbehörde?",a:""},
+{i:"N9",s:"S19",t:"BAU",p:0,q:"Wann kann ein abP/abZ anstelle einer aBG verwendet werden?",a:""},
+{i:"N10",s:"S19",t:"BAU",p:0,q:"Welche Möglichkeiten hat der Hersteller, wenn das Bauprodukt von der hEN abweicht? Wer ist die zuständige Stelle für das EAD in Deutschland?",a:""},
+{i:"N11",s:"S19",t:"BAU",p:0,q:"Beschreiben Sie die Gründe für die Novellierung der MBO 2016 und die Einführung von abZ, abP, aBG, vBG. Welcher Bescheid wird dadurch sukzessive ersetzt?",a:""},
+{i:"N12",s:"S19",t:"BAU",p:0,q:"Wie ist der Brandabschnitt nach M-IndBauRL definiert?",a:""},
+{i:"N13",s:"S19",t:"BAU",p:0,q:"Was muss im Prüfbericht zur Bewertung von Mängeln enthalten sein? Was muss im Prüfbericht bei Messwerten enthalten sein?",a:""},
+{i:"N14",s:"S19",t:"BAU",p:0,q:"Gebäudeaufgabe 2020 (NE1 Cafeteria 320 m² / 35 Plätze; NE2 Seminarraum 380 m² / 90 Plätze; NE3 Pflege 300 m² / 8 Personen zur Pflege; NE4 Büro aus zwei Räumen 200 m² und 480 m²): Gebäudeklasse; die beiden wesentlichen Bestandteile des Rettungsweges nach MBO; Sondertatbestand je NE nach §2 Nr. 4 MBO; Abschottungen (1)-(7) ohne Erleichterungen der MLAR/MLüAR nach europäischer Klassifizierung und Bauordnung; welches Zeichen ist bei (7) gemeint; ist Wand (4) eine Trennwand?",a:""},
+{i:"N15",s:"S18",t:"BAU",p:0,q:"Was muss in einem Prüfbericht nach den Prüfgrundsätzen bezüglich Messen dokumentiert sein?",a:""},
+{i:"N16",s:"S18",t:"BAU",p:0,q:"Nennen Sie die zwei Paragrafen der MBO, nach denen Abweichungen möglich sind. Welche kann nur von der untersten Bauaufsicht genehmigt werden?",a:""},
+{i:"N17",s:"S18",t:"BAU",p:0,q:"Wann reicht ein Prüfzeugnis für eine Bauart/ein Bauprodukt aus?",a:""},
+{i:"N18",s:"S18",t:"BAU",p:0,q:"Wie ist der deutsche Begriff für den europäischen Verwendbarkeitsnachweis?",a:""},
+{i:"N19",s:"S18",t:"BAU",p:0,q:"Definieren Sie den Begriff Brandabschnitt nach Industriebaurichtlinie.",a:""}
+];
+const NORMEN=`
+<div class="warnbox">Diese Liste nennt nur Regelwerke, die in deinen Protokollen <b>namentlich vorkommen</b>. Ausgabestände sind von dir gegen die im BBIK zugelassene Fassung und gegen Landesrecht Brandenburg zu prüfen. Nichts hier ist ergänzt oder geraten.</div>
+<h2>Fachübergreifend — Bauordnungsrecht</h2>
+<ul>
+<li><span class="k">MBO</span> — u. a. §2 (Begriffe, Sonderbauten), §3 (allgemeine Anforderungen), §14 (Brandschutz-Schutzziele), §21 (Übereinstimmungsbestätigung), §29/§31 (Trennwände, Decken), §51 (Sonderbauten), §67 (Abweichungen), §85a (Technische Baubestimmungen)</li>
+<li><span class="k">MVV TB</span> — insbesondere Abschnitt A 2 Brandschutz (A 2.2.2.5) und Anhang 14</li>
+<li><span class="k">M-PrüfVO</span> · <span class="k">M-PPVO</span> (§31 Aufgabenerledigung) · <span class="k">Muster-Prüfgrundsätze</span> (Ziffer 1)</li>
+<li><span class="k">Verordnung (EU) 305/2011</span> (BauPVO), Anhang 2 Grundanforderungen</li>
+<li>Muster-Richtlinien: <span class="k">M-GarVO</span>, <span class="k">M-VkVO</span>, <span class="k">M-IndBauRL 2019</span>, <span class="k">M-SchulbauR</span>, <span class="k">MHHRL</span>, <span class="k">MLAR</span>, <span class="k">MLüAR</span>, <span class="k">HolzbauRL</span></li>
+<li><span class="k">VDI 6010 Blatt 1</span> — Brandfallsteuermatrix</li>
+<li>Grundsatzpapier der Fachkommission Bauaufsicht: Rettung von Personen / wirksame Löscharbeiten</li>
+</ul>
+<h2>CO-Warnanlagen</h2>
+<ul><li><span class="k">M-GarVO §16</span>, insbesondere Abs. 6 (Pflicht COW), Abs. 2 und 3 (Lüftung, Langzeitmessung)</li>
+<li><span class="k">MVV TB Anhang 14 Abschnitt 9</span></li>
+<li><span class="k">VDI 2053-1:2014-12</span></li>
+<li><span class="k">DIN EN 50545-1</span> — Geräte und Sensoren</li></ul>
+<h2>Lüftungsanlagen</h2>
+<ul><li><span class="k">MLüAR</span> — u. a. Abschnitt 3.2 (brennbare Leitungen), Kapitel 5.1.2 (Abstände Außenluftmündung)</li>
+<li><span class="k">MVV TB Anhang 14</span> (Lüftung)</li>
+<li><span class="k">DIN 1946-4</span> (Krankenhaus) · <span class="k">DIN EN 12599</span> · <span class="k">DIN 16798-1</span> · <span class="k">VDI 2053</span> · <span class="k">M-GarVO</span> — das waren 2024 die zugelassenen Unterlagen</li>
+<li>Arbeitsstättenrichtlinie (natürliche Lüftung Büroraum)</li></ul>
+<h2>Rauchabzugsanlagen</h2>
+<ul><li><span class="k">MVV TB Anhang 14</span>, u. a. Abschnitt 7 Tabelle 5</li>
+<li><span class="k">DIN 18232</span>-Reihe, insbesondere 18232-2</li>
+<li><span class="k">M-IndBauRL 2019</span> · <span class="k">M-VkVO</span></li></ul>
+<h2>Druckbelüftung / RDA</h2>
+<ul><li><span class="k">MHHRL</span> — Hochhäuser, Sicherheitstreppenräume über 60 m</li>
+<li>Technische Regeln für Energieversorgung, Entrauchungsklappen, Steuertafeln und Bedienfelder — im Protokoll als Frage gestellt, Antwort offen</li></ul>`;
+const OFFEN=`
+<h2>Was ich nicht weiß und du klären musst</h2>
+<ul>
+<li>Sämtliche <b>15 DBA/RDA-Fragen 2025</b> sind ohne jede Antwort im Protokoll.</li>
+<li>Fast alle <b>RAA-Fragen 2025</b> (70 Punkte) sind ohne Antwort — inklusive der Rechenaufgaben zu hydraulischem Durchmesser, Druckverlust, Ventilatorgesetzen und CO2-Leitungsdruck.</li>
+<li><b>„Druckstufe 1“</b> bei Entrauchungsleitungen — nirgends beantwortet.</li>
+<li><b>Türöffnungskräfte</b> Lüftungsanlage vs. maschinelle RAA inkl. Fundstelle — offen.</li>
+<li><b>MVV TB Anhang 14</b>: Nur Abschnitt 9 (COW) und Abschnitt 7 Tabelle 5 sind belegt. Die Überschriften der übrigen Abschnitte werden mündlich wörtlich abgefragt — Wortlaut beschaffen.</li>
+<li>Die <b>Fragen- und Antwortenkataloge der obersten Bauaufsicht</b> vom Prüfsachverständigentag sowie der <b>Muster-Prüfbericht Brandenburg</b> sind die einzige quasi-amtliche Antwortquelle — beschaffen.</li>
+<li>Nachgewiesener Fehler im COW-Lösungsvorschlag 10.6 („überschreiten“ statt „überschreiten nicht“) — siehe Frage C16.</li>
+<li>Frage C26: Die Haltung „nur 250 ppm zählt“ hat der Kommission ausdrücklich nicht gefallen. Eigene Position sauber begründen.</li>
+</ul>`;
+
+const TOPICS={BAU:"Bauordnungsrecht",COW:"CO-Warnanlagen",LTA:"Lüftungsanlagen",RAA:"Rauchabzugsanlagen",RDA:"Druckbelüftung / RDA"};
+const PRUEF=["ungeprüft","in Arbeit","geprüft – bestätigt","geprüft – Protokoll falsch","Quelle fehlt"];
+const LERN=["offen","unsicher","sitzt"];
+const IVL={1:1,2:2,3:4,4:8,5:16};
+
+const KEY="bbik_matrix_v3";
+const PWA=/^https?:$/.test(location.protocol);
+let state={};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const flag=$("#flag");
+const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const heute=()=>new Date().toISOString().slice(0,10);
+const st=i=>state[i]||(state[i]={});
+
+/* ====== SPEICHERUNG ======
+   Der Stand liegt NICHT in irgendeinem Browserspeicher, sondern wird beim Speichern
+   fest in eine neue Fassung dieser HTML-Datei geschrieben. Die gespeicherte Datei
+   ist die Anwendung samt allen Eingaben. Nichts kann verschwinden.            */
+const DYN=["list","pList","kBoxes","kBar","kAntwort","kFrage","normen","offen",
+           "fTopic","fSrc","fPruef","kTopic","pTopic","cnt","stats","kStats","pStats","flag"];
+const INITIAL={};
+DYN.forEach(id=>{const e=document.getElementById(id); if(e) INITIAL[id]=e.innerHTML;});
+
+let dirty=false, handle=null;
+function markDirty(){
+  dirty=true;
+  const d=$("#dirty"); d.textContent="ungesicherte Änderungen"; d.style.color="var(--bad)";
+  let lsOk=false;
+  try{localStorage.setItem(KEY,JSON.stringify(state)); lsOk=true;}catch(e){}
+  try{window.storage.set(KEY,JSON.stringify(state));}catch(e){}
+  if(PWA&&lsOk) markClean("automatisch "+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}));
+}
+function markClean(wo){
+  dirty=false;
+  const d=$("#dirty"); d.textContent="gesichert · "+wo; d.style.color="var(--ok)";
+}
+async function load(){
+  if(PWA){
+    try{const v=localStorage.getItem(KEY); if(v){state=JSON.parse(v); return;}}catch(e){}
+    if(window.SAVED_STATE){ state=window.SAVED_STATE; return; }
+    state={}; return;
+  }
+  if(window.SAVED_STATE){ state=window.SAVED_STATE; return; }
+  try{const v=localStorage.getItem(KEY); if(v){state=JSON.parse(v);return;}}catch(e){}
+  try{const r=await window.storage.get(KEY); if(r&&r.value){state=JSON.parse(r.value);return;}}catch(e){}
+  state={};
+}
+function bauDatei(){
+  const c=document.documentElement.cloneNode(true);
+  DYN.forEach(id=>{const e=c.querySelector("#"+id); if(e&&INITIAL[id]!==undefined) e.innerHTML=INITIAL[id];});
+  const alt=c.querySelector("#savedstate"); if(alt) alt.remove();
+  const s=document.createElement("script"); s.id="savedstate";
+  s.textContent="window.SAVED_STATE="+JSON.stringify(state).replace(/</g,"\\u003c")+";";
+  c.querySelector("head").appendChild(s);
+  const d=c.querySelector("#dirty"); if(d){d.textContent="gesichert";d.removeAttribute("style");}
+  return "<!DOCTYPE html>\n"+c.outerHTML;
+}
+const inVorschau = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+async function speichern(){
+  if(PWA){ dl(JSON.stringify(state,null,1),"BBIK_Sicherung_"+heute()+".json","application/json");
+    markClean("JSON-Sicherung erzeugt "+new Date().toLocaleTimeString("de-DE")); return; }
+  const txt=bauDatei(), name="bbik_lernsystem.html";
+  if(window.showSaveFilePicker){
+    try{
+      if(!handle) handle=await window.showSaveFilePicker({suggestedName:name,
+        types:[{description:"HTML",accept:{"text/html":[".html"]}}]});
+      const w=await handle.createWritable(); await w.write(txt); await w.close();
+      markClean("in deine Datei geschrieben "+new Date().toLocaleTimeString("de-DE")); return;
+    }catch(e){ if(e.name==="AbortError"){return;} handle=null; }
+  }
+  if(inVorschau){ notausgang(); return; }
+  try{ dl(txt,name,"text/html");
+    markClean("Datei heruntergeladen "+new Date().toLocaleTimeString("de-DE")+" — alte Fassung ersetzen");
+  }catch(e){ notausgang(); }
+}
+function notausgang(){
+  $("#vorschau").style.display="";
+  window.scrollTo(0,0);
+  const j=JSON.stringify(state);
+  const box=document.createElement("div");
+  box.style.cssText="margin-top:12px";
+  box.innerHTML='<b>Notausgang, damit deine Arbeit nicht verloren geht:</b><br>'+
+    '<button id="kopier" style="margin:8px 0">Eingaben in die Zwischenablage kopieren</button>'+
+    '<div class="meta">Das Kopierte in eine leere Textdatei einfügen und sichern. In der heruntergeladenen Fassung kannst du es über „Sicherung einlesen“ wieder hereinholen.</div>'+
+    '<textarea readonly style="width:100%;height:90px;margin-top:8px">'+j.replace(/</g,"&lt;")+'</textarea>';
+  const alt=$("#notaus"); if(alt) alt.remove();
+  box.id="notaus"; $("#vorschau").appendChild(box);
+  $("#kopier").onclick=()=>{
+    const ta=box.querySelector("textarea"); ta.select();
+    try{ navigator.clipboard.writeText(j); }catch(e){ document.execCommand("copy"); }
+    $("#kopier").textContent="kopiert";
+  };
+}
+function persist(){ markDirty(); }
+window.addEventListener("beforeunload",e=>{ if(dirty){e.preventDefault();e.returnValue="";} });
+document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key==="s"){e.preventDefault();speichern();} });
+function set(i,k,v){ st(i)[k]=v; if(k==="pruef") st(i).datum=heute(); persist(); }
+/* Bearbeitungszustand einer Frage — daran erkennst du, was du schon angefasst hast */
+function zustand(o){
+  const s=st(o.i), a=(s.antwort||"").trim();
+  if(s.pruef==="geprüft – bestätigt")   return {t:"bestätigt",           c:"var(--ok)",  k:"st-bestaetigt"};
+  if(s.pruef==="geprüft – Protokoll falsch") return {t:"Protokoll falsch", c:"var(--bad)", k:"st-falsch"};
+  if(s.pruef==="Quelle fehlt")          return {t:"Quelle fehlt",        c:"var(--warn)",k:"st-quelle"};
+  if(o.a&&a===o.a.trim())               return {t:"Protokolltext unverändert — noch nicht kontrolliert", c:"var(--warn)", k:"st-roh"};
+  if(a)                                 return {t:"bearbeitet, noch nicht bestätigt", c:"var(--acc)", k:"st-bearbeitet"};
+  return {t:"keine Antwort erfasst", c:"var(--dim)", k:"st-ungeprüft"};
+}
+let tmr=null;
+function cls(p){return p==="geprüft – bestätigt"?"st-bestaetigt":p==="geprüft – Protokoll falsch"?"st-falsch":p==="Quelle fehlt"?"st-quelle":"st-ungeprüft";}
+const bestaetigt=i=>st(i).pruef==="geprüft – bestätigt";
+
+/* ================= KARTEIKARTEN ================= */
+let stapel=[], pos=0, auf=false;
+
+function kartentext(o){
+  const s=st(o.i);
+  return {txt:s.antwort||"",fund:s.fund||""};
+}
+function faellig(i){ const s=st(i); if(!s.due) return true; return s.due<=heute(); }
+
+function baueStapel(){
+  const t=$("#kTopic").value, mod=$("#kQuelle").value, nurF=$("#kFaellig").value==="1";
+  stapel=Q.filter(o=>{
+    if(t&&o.t!==t)return false;
+    if(mod==="1"&&!bestaetigt(o.i))return false;
+    if(mod==="2"&&!(st(o.i).antwort||"").trim())return false;
+    if(mod==="4"&&!(o.a&&(st(o.i).antwort||"").trim()===o.a.trim()))return false;
+    if(nurF&&!faellig(o.i))return false;
+    return true;
+  });
+  for(let i=stapel.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[stapel[i],stapel[j]]=[stapel[j],stapel[i]];}
+  stapel.sort((a,b)=>(st(a.i).box||1)-(st(b.i).box||1));
+  pos=0; auf=false; zeigeKarte();
+}
+function zeigeKarte(){
+  const bx={1:0,2:0,3:0,4:0,5:0};
+  Q.forEach(o=>{ if(st(o.i).box) bx[st(o.i).box]++; });
+  $("#kBoxes").innerHTML=[1,2,3,4,5].map(n=>"<span>Fach "+n+": "+bx[n]+"</span>").join("")+
+    "<span>noch nie: "+Q.filter(o=>!st(o.i).box).length+"</span>";
+  if(!stapel.length){
+    $("#kFrage").innerHTML="<span class='leer'>Kein Kartenstapel. Entweder ist heute nichts fällig, oder es gibt in diesem Fachgebiet noch keine bestätigte Antwort. Stelle oben auf „Alle Karten“ oder arbeite erst in der Werkbank.</span>";
+    $("#kAntwort").innerHTML=""; $("#kBar").innerHTML=""; $("#kStats").textContent="0 Karten"; return;
+  }
+  if(pos>=stapel.length){
+    $("#kFrage").innerHTML="Durch. "+stapel.length+" Karten bearbeitet.";
+    $("#kAntwort").innerHTML=""; $("#kBar").innerHTML='<button id="kAgain">Noch einmal</button>';
+    $("#kAgain").onclick=baueStapel; return;
+  }
+  const o=stapel[pos], s=st(o.i);
+  $("#kStats").textContent=(pos+1)+" / "+stapel.length+"  ·  Fach "+(s.box||1);
+  $("#kFrage").innerHTML='<span class="pill" style="background:var(--'+o.t+')">'+o.t+'</span> <span class="meta">'+o.i+'</span><br><br>'+esc(o.q);
+  if(!auf){
+    $("#kAntwort").innerHTML="";
+    $("#kBar").innerHTML='<button id="kShow">Antwort zeigen</button>';
+    $("#kShow").onclick=()=>{auf=true;zeigeKarte();};
+  }else{
+    const a=kartentext(o), z=zustand(o);
+    $("#kAntwort").innerHTML='<div class="antwort">'+(a.txt?esc(a.txt):'<span class="leer">Zu dieser Frage ist noch keine Antwort erfasst.</span>')+'</div>'+
+      '<div class="fund" style="color:'+z.c+'">'+z.t+(a.fund?' · '+esc(a.fund):'')+'</div>';
+    $("#kBar").innerHTML='<button class="b-nein" data-b="1">Nicht gewusst</button><button class="b-halb" data-b="2">Wackelig</button><button class="b-ja" data-b="3">Gewusst</button>';
+    $$("#kBar button").forEach(b=>b.onclick=()=>bewerte(+b.dataset.b));
+  }
+}
+function bewerte(n){
+  const o=stapel[pos], s=st(o.i), box=s.box||1;
+  s.box = n===1?1 : n===2?box : Math.min(5,box+1);
+  s.lern = n===1?"offen" : n===2?"unsicher" : (s.box>=4?"sitzt":"unsicher");
+  const d=new Date(); d.setDate(d.getDate()+(n===1?0:IVL[s.box]));
+  s.due=d.toISOString().slice(0,10); s.zuletzt=heute();
+  persist(); pos++; auf=false; zeigeKarte();
+}
+$("#kk").addEventListener("click",e=>{
+  if(e.target.tagName==="BUTTON")return;
+  if(!auf&&stapel.length&&pos<stapel.length){auf=true;zeigeKarte();}
+});
+document.addEventListener("keydown",e=>{
+  if($("#lernen").style.display==="none")return;
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;
+  if(e.code==="Space"){e.preventDefault(); if(!auf){auf=true;zeigeKarte();}}
+  if(auf&&["1","2","3"].includes(e.key)) bewerte(+e.key);
+});
+["kTopic","kQuelle","kFaellig"].forEach(id=>document.addEventListener("change",e=>{if(e.target.id===id)baueStapel();}));
+$("#kStart").onclick=baueStapel;
+
+/* ================= WERKBANK ================= */
+function filtered(){
+  const q=$("#search").value.toLowerCase(),ft=$("#fTopic").value,fs=$("#fSrc").value,fp=$("#fPruef").value;
+  return Q.filter(o=>{const s=st(o.i);
+    if(ft&&o.t!==ft)return false; if(fs&&o.s!==fs)return false;
+    if(fp&&(s.pruef||"ungeprüft")!==fp)return false;
+    if(q&&!((o.q+" "+(o.a||"")+" "+(s.antwort||"")+" "+(s.fund||"")).toLowerCase().includes(q)))return false;
+    return true;});
+}
+function render(){
+  const rows=filtered(),g=$("#group").value,box=$("#list");box.innerHTML="";let last=null;
+  rows.forEach(o=>{
+    if(g){const key=g==="t"?o.t:o.s;
+      if(key!==last){last=key;const h=document.createElement("div");h.className="grpH";
+      h.textContent=g==="t"?TOPICS[key]:SRC[key].n+"  ·  "+SRC[key].f;box.appendChild(h);}}
+    const s=st(o.i),z=zustand(o),d=document.createElement("div");d.className="card "+z.k;
+    d.innerHTML='<div class="chead"><span class="nr">'+o.i+'</span>'+
+      '<span class="pill" style="background:var(--'+o.t+')">'+o.t+'</span>'+
+      '<span class="zust" style="color:'+z.c+';border-color:'+z.c+'">'+z.t+'</span>'+
+      '<span class="meta">'+SRC[o.s].n+(o.p?' · '+o.p+' P.':'')+(s.datum?' · bewertet '+s.datum:'')+(s.box?' · Fach '+s.box:'')+'</span></div>'+
+      '<div class="qtext">'+esc(o.q)+'</div>'+
+      '<label class="fl">Meine Antwort</label>'+
+      '<textarea class="ans" data-i="'+o.i+'" data-k="antwort" placeholder="Antwort ausformulieren — so, wie sie in der Klausur stehen soll.">'+esc(s.antwort||"")+'</textarea>'+
+      '<label class="fl">Fundstelle</label>'+
+      '<input class="fund" data-i="'+o.i+'" data-k="fund" value="'+esc(s.fund||"").replace(/"/g,"&quot;")+'" placeholder="z. B. M-GarVO §16 Abs. 6">'+
+      '<div class="row"><div><label class="fl">Prüfstatus</label><select data-i="'+o.i+'" data-k="pruef">'+
+        PRUEF.map(x=>'<option'+(x===(s.pruef||"ungeprüft")?' selected':'')+'>'+x+'</option>').join('')+'</select></div>'+
+      '<div><label class="fl">Lernstatus</label><select data-i="'+o.i+'" data-k="lern">'+
+        LERN.map(x=>'<option'+(x===(s.lern||"offen")?' selected':'')+'>'+x+'</option>').join('')+'</select></div></div>'+
+      (o.a?'<details class="prot"><summary>Originaltext aus dem Protokoll zum Vergleich</summary><div class="body">'+esc(o.a)+'</div><button class="reset" data-r="'+o.i+'" style="margin-top:8px">Original wiederherstellen</button></details>':'<div class="meta" style="margin-top:8px">Im Protokoll steht zu dieser Frage keine Antwort — hier musst du selbst formulieren.</div>');
+    box.appendChild(d);
+  });
+  $("#cnt").textContent=Q.length;
+  const b=Q.filter(o=>bestaetigt(o.i)).length;
+  $("#stats").textContent=rows.length+" angezeigt · "+b+"/"+Q.length+" bestätigt";
+}
+document.addEventListener("input",e=>{const el=e.target;
+  if(el.dataset&&el.dataset.i&&(el.dataset.k==="antwort"||el.dataset.k==="fund")){set(el.dataset.i,el.dataset.k,el.value);return;}
+  if(el.id==="search")render();});
+document.addEventListener("click",e=>{
+  const r=e.target.dataset&&e.target.dataset.r; if(!r)return;
+  const o=Q.find(x=>x.i===r); if(!o)return;
+  if(confirm("Deine Bearbeitung dieser Antwort verwerfen und den Protokolltext zurückholen?")){
+    st(r).antwort=o.a; st(r).pruef="ungeprüft"; persist(); render();
+  }});
+document.addEventListener("change",e=>{const el=e.target;
+  if(el.dataset&&el.dataset.i&&(el.dataset.k==="pruef"||el.dataset.k==="lern")){set(el.dataset.i,el.dataset.k,el.value);render();return;}
+  if(["fTopic","fSrc","fPruef","group"].includes(el.id))render();});
+
+/* ================= PODCAST ================= */
+function pRender(){
+  const t=$("#pTopic").value,box=$("#pList");box.innerHTML="";
+  Object.keys(TOPICS).forEach(k=>{
+    if(t&&k!==t)return;
+    const rows=Q.filter(o=>o.t===k);if(!rows.length)return;
+    const div=document.createElement("div");div.className="sel";
+    div.innerHTML='<div class="grpH" style="margin-top:0">'+TOPICS[k]+'</div>'+rows.map(o=>{
+      const s=st(o.i),z=zustand(o);
+      return '<label><input type="checkbox" data-p="'+o.i+'"'+(s.pod?' checked':'')+'>'+
+      '<span><b>'+o.i+'</b> — '+esc(o.q.slice(0,150))+(o.q.length>150?" …":"")+
+      ' <span class="meta" style="color:'+z.c+'">['+z.t+']</span></span></label>';
+    }).join("");
+    box.appendChild(div);
+  });
+  pStat();
+}
+function pStat(){const n=Q.filter(o=>st(o.i).pod).length;
+  $("#pStats").textContent=n+" Fragen ausgewählt";}
+document.addEventListener("change",e=>{if(e.target.dataset&&e.target.dataset.p){st(e.target.dataset.p).pod=e.target.checked;persist();pStat();}
+  if(e.target.id==="pTopic")pRender();});
+$("#pAllC").onclick=()=>{const t=$("#pTopic").value;Q.forEach(o=>{if(!t||o.t===t){if(bestaetigt(o.i))st(o.i).pod=true;}});persist();pRender();};
+$("#pNone").onclick=()=>{Q.forEach(o=>st(o.i).pod=false);persist();pRender();};
+$("#pExp").onclick=()=>{
+  const sel=Q.filter(o=>st(o.i).pod);
+  if(!sel.length){alert("Keine Fragen ausgewählt.");return;}
+  let out="# Podcast-Auftrag\n\nTitel: "+($("#pTitel").value||"ohne Titel")+"\nStand: "+new Date().toLocaleDateString("de-DE")+"\nAusgewählt: "+sel.length+" Fragen\n\n";
+  out+="Bitte daraus ein Sprechskript bauen: durchgehender Fließtext zum Anhören, Paragrafen und Zahlen ausgeschrieben (\"Paragraf sechzehn Absatz sechs\"), keine Abkürzungen, keine Sonderzeichen.\n";
+  out+="Antworten mit dem Vermerk BESTÄTIGT sind von mir geprüft und dürfen als gesichert gesprochen werden. Alles andere ist ungeprüft und muss im Skript als offen gekennzeichnet oder weggelassen werden.\n\n---\n";
+  Object.keys(TOPICS).forEach(t=>{
+    const rows=sel.filter(o=>o.t===t);if(!rows.length)return;
+    out+="\n## "+TOPICS[t]+"\n";
+    rows.forEach(o=>{const s=st(o.i);
+      const ok=bestaetigt(o.i);
+      out+="\n### "+o.i+" — "+o.q+"\n\n";
+      const z=zustand(o);
+      if((s.antwort||"").trim()){out+="**"+z.t.toUpperCase()+"**\n\n"+s.antwort+"\n"; if(s.fund)out+="\nFundstelle: "+s.fund+"\n";}
+      else {out+="**KEINE ANTWORT VORHANDEN**\n";}
+    });
+  });
+  dl(out,"podcast_auftrag.md","text/markdown");
+};
+function dl(txt,name,mime){const b=new Blob([txt],{type:mime});const a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download=name;a.click();}
+
+/* ================= Export / Import ================= */
+$("#expJson").onclick=()=>dl(JSON.stringify(state,null,1),"bbik_lernstand.json","application/json");
+$("#impBtn").onclick=()=>$("#imp").click();
+$("#imp").onchange=e=>{const f=e.target.files[0],r=new FileReader();
+  r.onload=()=>{try{state=JSON.parse(r.result);persist();render();baueStapel();pRender();}catch(err){alert("Datei nicht lesbar — es wird eine JSON-Sicherung erwartet.");}};
+  r.readAsText(f);};
+$("#expMdAll").onclick=()=>{
+  let out="# BBIK — Arbeitsstand\n\nStand: "+new Date().toLocaleDateString("de-DE")+"\n";
+  Object.keys(TOPICS).forEach(t=>{const rows=Q.filter(o=>o.t===t);if(!rows.length)return;
+    out+="\n# "+TOPICS[t]+"\n";
+    rows.forEach(o=>{const s=st(o.i);
+      out+="\n### "+o.i+(o.p?"  ("+o.p+" P.)":"")+"  ·  "+SRC[o.s].n+"\n\n**Frage:** "+o.q+"\n\n";
+      out+="**Meine Antwort:** "+(s.antwort||"")+"\n\n**Fundstelle:** "+(s.fund||"")+"\n\n**Prüfstatus:** "+(s.pruef||"ungeprüft")+" · **Lernstatus:** "+(s.lern||"offen")+(s.box?" · Fach "+s.box:"")+"\n\n";
+      if(o.a)out+="<details><summary>Protokollantwort (ungeprüft)</summary>\n\n"+o.a.split("\n").map(l=>"> "+l).join("\n")+"\n\n</details>\n\n";
+      out+="---\n";});});
+  dl(out,"BBIK_Arbeitsstand.md","text/markdown");
+};
+
+/* ================= Tabs & Init ================= */
+$$(".tab").forEach(t=>t.onclick=()=>{$$(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");
+  ["lernen","fragen","podcast","speichern","normen","offen"].forEach(s=>$("#"+s).style.display="none");
+  $("#"+t.dataset.tab).style.display="";});
+[["fTopic"],["kTopic"],["pTopic"]].forEach(([id])=>Object.entries(TOPICS).forEach(([k,v])=>$("#"+id).insertAdjacentHTML("beforeend",'<option value="'+k+'">'+v+'</option>')));
+Object.entries(SRC).forEach(([k,v])=>$("#fSrc").insertAdjacentHTML("beforeend",'<option value="'+k+'">'+v.n+'</option>'));
+PRUEF.forEach(x=>$("#fPruef").insertAdjacentHTML("beforeend","<option>"+x+"</option>"));
+
+$("#normen").innerHTML=NORMEN;
+$("#offen").innerHTML=OFFEN;
+
+/* ================= DIAGNOSE ================= */
+function jn(ok,txt){return '<span style="color:'+(ok?"var(--ok)":"var(--bad)")+'">'+(ok?"JA ":"NEIN")+'</span>  '+txt;}
+function diagnose(){
+  const r=[];
+  r.push("Adresse: "+location.protocol+"//"+(location.host||"(lokale Datei)"));
+  r.push(jn(!inVorschau,"außerhalb einer Vorschau geöffnet"));
+  r.push(jn(!!window.showSaveFilePicker,"Direktes Überschreiben der Datei möglich (Chrome/Edge)"));
+  let ls=false; try{localStorage.setItem("__t","1");ls=localStorage.getItem("__t")==="1";localStorage.removeItem("__t");}catch(e){}
+  r.push(jn(ls,"Browserspeicher nutzbar — hält den Stand beim Neuladen"));
+  let bl=false; try{const u=URL.createObjectURL(new Blob(["x"]));URL.revokeObjectURL(u);bl=true;}catch(e){}
+  r.push(jn(bl,"Datei-Erzeugung möglich"));
+  r.push(jn(!!(navigator.clipboard&&navigator.clipboard.writeText),"Zwischenablage nutzbar"));
+  r.push(jn(!!window.SAVED_STATE,"Diese Datei enthält einen gespeicherten Stand"));
+  const n=Object.keys(state).filter(k=>state[k]&&(state[k].antwort||state[k].pruef)).length;
+  r.push("Erfasste Einträge im Arbeitsspeicher: "+n);
+  $("#diag").innerHTML=r.join("<br>");
+}
+$("#dTest").onclick=diagnose;
+$("#dSave").onclick=async()=>{
+  const log=$("#dLog"); log.style.display=""; log.textContent="Versuche der Reihe nach …\n";
+  const txt=bauDatei();
+  if(window.showSaveFilePicker){
+    try{ handle=await window.showSaveFilePicker({suggestedName:"bbik_lernsystem.html",
+        types:[{description:"HTML",accept:{"text/html":[".html"]}}]});
+      const w=await handle.createWritable(); await w.write(txt); await w.close();
+      log.textContent+="Weg 1 Datei überschreiben: ERFOLG\n"; markClean("Datei überschrieben"); return;
+    }catch(e){ log.textContent+="Weg 1 Datei überschreiben: "+e.name+" — "+e.message+"\n"; }
+  } else log.textContent+="Weg 1 Datei überschreiben: von diesem Browser nicht angeboten\n";
+  try{ dl(txt,"bbik_lernsystem.html","text/html");
+    log.textContent+="Weg 2 Herunterladen: ausgelöst — sieh im Download-Ordner nach\n"; markClean("heruntergeladen");
+  }catch(e){ log.textContent+="Weg 2 Herunterladen: "+e.name+" — "+e.message+"\n"; }
+  try{ localStorage.setItem(KEY,JSON.stringify(state)); log.textContent+="Weg 3 Browserspeicher: ERFOLG, Stand überlebt das Neuladen\n"; }
+  catch(e){ log.textContent+="Weg 3 Browserspeicher: "+e.name+" — "+e.message+"\n"; }
+  log.textContent+="\nWenn Weg 1 und 2 fehlgeschlagen sind, nutze unten die Sicherung von Hand und schick mir diesen Text.";
+};
+$("#mShow").onclick=()=>{$("#mBox").value=JSON.stringify(state);};
+$("#mCopy").onclick=()=>{const t=$("#mBox");if(!t.value)t.value=JSON.stringify(state);
+  t.select();try{navigator.clipboard.writeText(t.value);}catch(e){try{document.execCommand("copy");}catch(e2){}}
+  $("#mCopy").textContent="kopiert";setTimeout(()=>$("#mCopy").textContent="In Zwischenablage",1500);};
+$("#mLoad").onclick=()=>{try{const o=JSON.parse($("#mBox").value);
+  if(!o||typeof o!=="object")throw 0; state=o; Q.forEach(x=>{const s=st(x.i);if(s.antwort===undefined&&x.a)s.antwort=x.a;});
+  persist();render();baueStapel();pRender();alert("Stand übernommen.");}catch(e){alert("Der eingefügte Text ist keine gültige Sicherung.");}};
+
+$("#btnSave").onclick=speichern;
+
+load().then(()=>{
+  Q.forEach(o=>{const s=st(o.i); if(s.antwort===undefined&&o.a) s.antwort=o.a;});
+  render();baueStapel();pRender();diagnose();
+  markClean(PWA?"Stand aus dem Gerätespeicher geladen":(window.SAVED_STATE?"Stand aus der Datei geladen":"neuer Stand"));
+  if(PWA){
+    $("#btnSave").textContent="Sicherung (JSON)";
+    $("#flag").textContent="Änderungen werden automatisch im Gerät gespeichert";
+    if("ontouchstart" in window){const h=document.querySelector(".kkhint"); if(h)h.textContent="Auf die Karte tippen = aufdecken";}
+    if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}
+  }
+  if(!PWA && inVorschau && !window.showSaveFilePicker){
+    $("#vorschau").style.display="";
+    $("#dirty").textContent="Vorschau — speichert nicht";
+    $("#dirty").style.color="var(--bad)";
+    $("#flag").textContent="Vorschau: Datei erst herunterladen, dann arbeiten";
+  }
+});
+</script>
+
+
+</body></html>
